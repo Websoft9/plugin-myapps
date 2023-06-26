@@ -6,7 +6,7 @@ jobs:
   fetch-data:
     runs-on: ubuntu-latest
     env:
-      MYAPPS_LOGO_DIR: "data/logos"
+      MYAPPS_LOGO_DIR: "logos"
 
     steps:
       - uses: actions/checkout@v2
