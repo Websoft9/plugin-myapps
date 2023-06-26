@@ -121,10 +121,17 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                 </span>
                             </Col>
                             <Col xs={12} md={2}>
-                                <a href={`/portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`}
-                                    target="_blank" className="me-2">
+                                {/* <a href={`/portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`}
+                                    target="_parent" className="me-2">
                                     <Button variant="primary" size="sm" className="float-end">{_("More")}</Button>
-                                </a>
+                                </a> */}
+                                <Button variant="primary" size="sm" className="float-end me-2" onClick={() => {
+                                    let url = `container#portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`;
+                                    cockpit.file('/etc/hostname').watch(content => {
+                                        console.log(content);
+                                    });
+                                    cockpit.jump(url);
+                                }}>{_("More")}</Button>
                             </Col>
                         </Row>
                     </Card.Header>
