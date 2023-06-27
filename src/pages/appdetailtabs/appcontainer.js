@@ -126,7 +126,7 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                     <Button variant="primary" size="sm" className="float-end">{_("More")}</Button>
                                 </a> */}
                                 <Button variant="primary" size="sm" className="float-end me-2" onClick={() => {
-                                    let url = `container#portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`;
+                                    let url = `container#/portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`;
                                     cockpit.file('/etc/hostname').watch(content => {
                                         console.log(content);
                                     });
@@ -159,15 +159,42 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                 </Badge>
                                             </td>
                                             <td style={{ textAlign: 'center' }}>
-                                                <a href={`/portainer/#!/${endpointsId}/docker/containers/${container.Id}/logs`}
-                                                    target="_blank" title='Logs'>
+                                                <a href="#" onClick={(e) => {
+                                                    e.preventDefault();
+                                                    let url = `container#/portainer/#!/${endpointsId}/docker/containers/${container.Id}/logs`;
+                                                    cockpit.file('/etc/hostname').watch(content => {
+                                                        console.log(content);
+                                                    });
+                                                    cockpit.jump(url);
+                                                }}
+                                                    title='Logs'>
                                                     <i className="dripicons-document-remove noti-icon"></i>{' '}
                                                 </a>
                                                 {
                                                     container.State === "running" && (
-                                                        <a href={`/portainer/#!/${endpointsId}/docker/containers/${container.Id}/stats`}
-                                                            target="_blank" title='Stats'>
-                                                            <i className="dripicons-pulse noti-icon"></i>{' '}
+                                                        <a href="#" onClick={(e) => {
+                                                            e.preventDefault();
+                                                            let url = `container#/portainer/#!/${endpointsId}/docker/containers/${container.Id}/stats`;
+                                                            cockpit.file('/etc/hostname').watch(content => {
+                                                                console.log(content);
+                                                            });
+                                                            cockpit.jump(url);
+                                                        }} title='Stats'>
+                                                            <i className="dripicons-graph-bar noti-icon"></i>{' '}
+                                                        </a>
+                                                    )
+                                                }
+                                                {
+                                                    container.State === "running" && (
+                                                        <a href="#" onClick={(e) => {
+                                                            e.preventDefault();
+                                                            let url = `container#/portainer/#!/${endpointsId}/docker/containers/${container.Id}/exec`;
+                                                            cockpit.file('/etc/hostname').watch(content => {
+                                                                console.log(content);
+                                                            });
+                                                            cockpit.jump(url);
+                                                        }} title='Exec Console'>
+                                                            <i className="dripicons-code noti-icon"></i>{' '}
                                                         </a>
                                                     )
                                                 }
