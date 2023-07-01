@@ -2,7 +2,7 @@
 
 This plugin for display installed app applications. This includes access to the installation app, domain name settings, and management of functions such as containers and logs.
 
-![image](https://github.com/Websoft9/plugin-myapps/assets/43192516/a1a4a95f-42c8-493e-944e-b9757bb034dd)
+![image](https://github.com/Websoft9/plugin-myapps/assets/43192516/da04bdf7-af9e-4773-8992-92dd26f57ca9)
 
 ## Available Scripts
 
