@@ -1,6 +1,8 @@
-# Getting Started with Create React App
+# Websoft9 Plugin - `myapps`
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This plugin for display installed app applications. This includes access to the installation app, domain name settings, and management of functions such as containers and logs.
+
+![image](https://github.com/Websoft9/plugin-myapps/assets/43192516/a1a4a95f-42c8-493e-944e-b9757bb034dd)
 
 ## Available Scripts
 
