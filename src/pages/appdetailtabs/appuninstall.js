@@ -47,9 +47,9 @@ const UninstallConform = (props) => {
                         setDisable(true);
                         //调用卸载应用接口
                         const response = await AppUninstall({ app_id: props.app.app_id });
-                        if (response.data.Error) {
+                        if (response.Error) {
                             setShowAlert(true);
-                            setAlertMessage(response.data.Error.Message);
+                            setAlertMessage(response.Error.Message);
                         }
                         else {
                             closeAllModals(); //关闭弹窗并更新数据
@@ -112,7 +112,7 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
                                 setDisable(true);
                                 //调用应用停止接口
                                 const response = await AppStop({ app_id: props.data.app_id });
-                                if (response.data.Error) {
+                                if (response.Error) {
                                     navigate("/error")
                                 }
                                 else {
@@ -136,7 +136,7 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
                                 setDisable(true);
                                 try {
                                     const response = await AppStart({ app_id: props.data.app_id });
-                                    if (response.data.Error) {
+                                    if (response.Error) {
                                         navigate("/error")
                                     }
                                     else {

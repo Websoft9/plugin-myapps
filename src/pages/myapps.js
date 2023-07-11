@@ -146,13 +146,14 @@ const MyApps = (): React$Element<React$FragmentType> => {
     //获取所有已安装的App(只执行一次)
     const getAllAppsOnce = () => {
         AppList().then((response) => {
-            if (response.data.Error) {
-                setCode(response.data.Error.Code);
-                setError(response.data.Error.Message);
-                setErrorDetails(response.data.Error.Details);
+            response = JSON.parse(response);
+            if (response.Error) {
+                setCode(response.Error.Code);
+                setError(response.Error.Message);
+                setErrorDetails(response.Error.Details);
             }
             else {
-                const newApps = response.data.ResponseData;
+                const newApps = response.ResponseData;
                 setApps(newApps);
                 if (selectedAppRef.current) {
                     const updatedApp = newApps.find(
@@ -173,13 +174,14 @@ const MyApps = (): React$Element<React$FragmentType> => {
         //调用接口获取已经安装应用
         timer = setInterval(() => {
             AppList().then((response) => {
-                if (response.data.Error) {
-                    setCode(response.data.Error.Code);
-                    setError(response.data.Error.Message);
-                    setErrorDetails(response.data.Error.Details);
+                response = JSON.parse(response);
+                if (response.Error) {
+                    setCode(response.Error.Code);
+                    setError(response.Error.Message);
+                    setErrorDetails(response.Error.Details);
                 }
                 else {
-                    const newApps = response.data.ResponseData;
+                    const newApps = response.ResponseData;
                     setApps(newApps);
                     if (selectedAppRef.current) {
                         const updatedApp = newApps.find(

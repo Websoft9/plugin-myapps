@@ -45,12 +45,19 @@ axios.interceptors.response.use(
 );
 
 class APICore {
+    // 创建一个axios实例，并且设置baseURL
+    constructor() {
+        this.axiosInstance = axios.create({
+            baseURL: "http://47.92.222.186"
+            //withCredentials: true
+        });
+    }
     /**
     * Fetches data from given url
     */
     get = async (url, params) => {
         // 等待获取凭证并设置授权头
-        axios.defaults.headers.common['Authorization'] = 'Basic ' + await getCredentials();
+        this.axiosInstance.defaults.headers.common['Authorization'] = 'Basic ' + await getCredentials();
         let response;
         if (params) {
             var queryString = params
@@ -58,9 +65,9 @@ class APICore {
                     .map((key) => key + '=' + params[key])
                     .join('&')
                 : '';
-            response = axios.get(`${url}?${queryString}`, params);
+            response = this.axiosInstance.get(`${url}?${queryString}`, params);
         } else {
-            response = axios.get(`${url}`, params);
+            response = this.axiosInstance.get(`${url}`, params);
         }
         return response;
     };
@@ -70,8 +77,8 @@ class APICore {
     */
     create = async (url, data) => {
         // 等待获取凭证并设置授权头
-        axios.defaults.headers.common['Authorization'] = 'Basic ' + await getCredentials();
-        return axios.post(url, data);
+        this.axiosInstance.defaults.headers.common['Authorization'] = 'Basic ' + await getCredentials();
+        return this.axiosInstance.post(url, data);
     };
 }
 
