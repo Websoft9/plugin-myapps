@@ -1,5 +1,4 @@
 import MuiAlert from '@mui/material/Alert';
-import Snackbar from '@mui/material/Snackbar';
 import axios from 'axios';
 import classnames from "classnames";
 import cockpit from 'cockpit';
@@ -13,6 +12,8 @@ import AppAccess from './appdetailtabs/appaccess';
 import AppContainer from './appdetailtabs/appcontainer';
 import AppOverview from './appdetailtabs/appoverview';
 import Uninstall from './appdetailtabs/appuninstall';
+//import AppTerminal from './myterminal';
+//import AppTerminal from './appdetailtabs/appterminal';
 
 const _ = cockpit.gettext;
 
@@ -37,6 +38,11 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
 
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
+    const [portainerJwt, setPortainerJwt] = useState(null);
+
     const handleAlertClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -48,10 +54,6 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     //通过Portainer的接口获取容器数据
     const getContainersData = async () => {
         try {
-            var protocol = window.location.protocol;
-            var host = window.location.host;
-            var baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
-
             var jwt = window.localStorage.getItem("portainer.JWT"); //获取存储在本地的JWT数据 
             var id = null;
 
@@ -63,86 +65,83 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                     throw new Error("Request portainer user info failed.");
                 }
                 else {
-                    axios.post(baseURL + "/portainer/api/auth", {
+                    var authResponse = await axios.post(baseURL + "/portainer/api/auth", {
                         username: response.ResponseData.user?.user_name,
                         password: response.ResponseData.user?.password
-                    }).then((authResponse) => {
-                        if (authResponse.status === 200) {
-                            jwt = "\"" + authResponse.data.jwt + "\"";
-                            window.localStorage.setItem('portainer\.JWT', jwt);
-                        } else {
-                            throw new Error("Request portainer tokens failed.");
-                        }
-                    });
+                    })
+                    if (authResponse.status === 200) {
+                        jwt = "\"" + authResponse.data.jwt + "\"";
+                        window.localStorage.setItem('portainer\.JWT', jwt);
+                    } else {
+                        throw new Error("Request portainer tokens failed.");
+                    }
                 }
             }
+            setPortainerJwt(jwt.replace(/"/g, ''));
 
             //从portainer接口获取endpoints
-            axios.get(baseURL + '/portainer/api/endpoints', {
+            const endpointsData = await axios.get(baseURL + '/portainer/api/endpoints', {
                 headers: {
                     'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
                 }
-            }).then((endpointsData) => {
-                if (endpointsData.status === 200) {
-                    //先判断是否获取了“本地”endpoint
-                    if (endpointsData.data.length == 0) { //没有“本地”endpoint
-                        //调用添加"本地"环境的接口
-                        axios.post(baseURL + '/portainer/api/endpoints', {},
-                            {
-                                params: {
-                                    Name: "local",
-                                    EndpointCreationType: 1
-                                },
-                                headers: {
-                                    'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
-                                }
+            })
+            if (endpointsData.status === 200) {
+                //先判断是否获取了“本地”endpoint
+                if (endpointsData.data.length == 0) { //没有“本地”endpoint
+                    //调用添加"本地"环境的接口
+                    const addEndpoint = await axios.post(baseURL + '/portainer/api/endpoints', {},
+                        {
+                            params: {
+                                Name: "local",
+                                EndpointCreationType: 1
+                            },
+                            headers: {
+                                'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
                             }
-                        ).then((addEndpoint) => {
-                            if (addEndpoint.status === 200) {
-                                id = addEndpoint.data?.Id;
-                                setEndpointsId(id);
-                            }
-                            else {
-                                throw new Error("Request portainer addEndpoint failed.");
-                            }
-                        })
-                    }
-                    else {
-                        //应该可能会返回“远程”的endpoint，这里只获取“本地”endpoint,条件为URL包含'/var/run/docker.sock'
-                        id = endpointsData.data.find(({ URL }) => URL.includes('/var/run/docker.sock')).Id;
+                        }
+                    )
+                    if (addEndpoint.status === 200) {
+                        id = addEndpoint.data?.Id;
                         setEndpointsId(id);
                     }
-
-                    //调用Portainer接口获取容器数据
-                    axios.get(baseURL + `/portainer/api/endpoints/${id}/docker/containers/json`, {
-                        headers: {
-                            'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
-                        },
-                        params: {
-                            all: true,
-                            filters: JSON.stringify({ "label": [`com.docker.compose.project=${customer_name}`] })
-                        }
-                    }).then((containersData) => {
-                        if (containersData.status === 200) {
-                            const data = containersData.data;
-                            const id = data.find(container => container.Names?.[0]?.replace(/^\/|\/$/g, '') === customer_name)?.Id;
-                            setMainContainerId(id);
-                            setContainersInfo(data);
-                        }
-                        else {
-                            throw new Error("Request portainer containersData failed.");
-                        }
-                    })
+                    else {
+                        throw new Error("Request portainer addEndpoint failed.");
+                    }
                 }
                 else {
-                    throw new Error("Request portainer endpointsData failed.");
+                    //应该可能会返回“远程”的endpoint，这里只获取“本地”endpoint,条件为URL包含'/var/run/docker.sock'
+                    id = endpointsData.data.find(({ URL }) => URL.includes('/var/run/docker.sock')).Id;
+                    setEndpointsId(id);
                 }
-            })
+                //调用Portainer接口获取容器数据
+                const containersData = await axios.get(baseURL + `/portainer/api/endpoints/${id}/docker/containers/json`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
+                    },
+                    params: {
+                        all: true,
+                        filters: JSON.stringify({ "label": [`com.docker.compose.project=${customer_name}`] })
+                    }
+                })
+                if (containersData.status === 200) {
+                    const data = containersData.data;
+                    const containerId = data.find(container => container.Names?.[0]?.replace(/^\/|\/$/g, '') === customer_name)?.Id;
+                    setMainContainerId(containerId);
+                    setContainersInfo(data);
+                }
+                else {
+                    throw new Error("Request portainer containersData failed.");
+                }
+            }
+            else {
+                throw new Error("Request portainer endpointsData failed.");
+            }
         }
         catch (error) {
-            setShowAlert(true);
-            setAlertType("error")
-            setAlertMessage(error);
+            console.log(error);
+            // setShowAlert(true);
+            // setAlertType("error")
+            // setAlertMessage(error);
         }
     }
 
@@ -200,7 +199,13 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         //     id: '4',
         //     title: _("Terminal"),
         //     icon: 'mdi dripicons-stack',
-        //     text: <AppTerminal endpointsId={endpointsId} containerId={mainContainerId} />
+        //     text: <AppTerminal endpointsId={endpointsId} containerId={mainContainerId} baseURL={baseURL} />
+        // },
+        // {
+        //     id: '4',
+        //     title: _("Terminal"),
+        //     icon: 'mdi dripicons-stack',
+        //     text: <AppTerminal endpointId={endpointsId} containerId={mainContainerId} token={portainerJwt} />
         // },
         {
             id: '5',
@@ -250,7 +255,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                                             setStartAppLoading(true);
                                             setRestartDisable(true);
                                             try {
-                                                const response = await AppStart({ app_id: currentApp.app_id });
+                                                let response = await AppStart({ app_id: currentApp.app_id });
+                                                response = JSON.parse(response);
                                                 if (response.Error) {
                                                     navigate("/error")
                                                 }
@@ -295,7 +301,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                                             setStopAppLoading(true);
                                             setRestartDisable(true);
                                             try {
-                                                const response = await AppStop({ app_id: currentApp.app_id });
+                                                let response = await AppStop({ app_id: currentApp.app_id });
+                                                response = JSON.parse(response);
                                                 if (response.Error) {
                                                     navigate("/error");
                                                 }
@@ -338,7 +345,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                                             setUninstallButtonDisable();
                                             setRestartAppLoading(true);
                                             setButtonDisable(true);
-                                            const response = await AppRestart({ app_id: currentApp.app_id });
+                                            let response = await AppRestart({ app_id: currentApp.app_id });
+                                            response = JSON.parse(response);
                                             if (response.Error) {
                                                 navigate("/error");
                                             }
@@ -406,56 +414,49 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                         <Col sm={2} className="mb-2 mb-sm-0">
                             <Nav variant="pills" className="flex-column">
                                 {tabContents.map((tab, index) => {
-                                    const renderElement = () => {
-                                        return (
-                                            <Nav.Item key={index}>
-                                                <Nav.Link as={Link} to="#" eventKey={tab.title}>
-                                                    <i
-                                                        className={classnames(
-                                                            tab.icon,
-                                                            'd-md-none',
-                                                            'd-block',
-                                                            'me-1'
-                                                        )}></i>
-                                                    <span className="d-none d-md-block">{tab.title}</span>
-                                                </Nav.Link>
-                                            </Nav.Item>
-                                        );
-                                    }
-                                    if (tab.title === "Terminal") {
-                                        if (currentApp.status === "running") {
-                                            return renderElement();
-                                        }
-                                    } else {
-                                        return renderElement();
-                                    }
+                                    return (
+                                        <Nav.Item key={index}>
+                                            <Nav.Link as={Link} to="#" eventKey={tab.title}>
+                                                <i
+                                                    className={classnames(
+                                                        tab.icon,
+                                                        'd-md-none',
+                                                        'd-block',
+                                                        'me-1'
+                                                    )}></i>
+                                                <span className="d-none d-md-block">{tab.title}</span>
+                                            </Nav.Link>
+                                        </Nav.Item>
+                                    );
                                 })}
                             </Nav>
                         </Col>
                         <Col sm={10}>
                             <Tab.Content style={{ height: "100%" }}>
-                                {tabContents.map((tab, index) => {
-                                    return (
-                                        <Tab.Pane eventKey={tab.title} id={tab.id} key={index} style={{ height: "100%" }}>
-                                            <Row style={{ height: "100%" }}>
-                                                <Col sm="12" /*style={{ height: tab.title === "Terminal" ? "600px" : "" }}*/>
-                                                    {tab.text}
-                                                </Col>
-                                            </Row>
-                                        </Tab.Pane>
-                                    );
-                                })}
+                                {
+                                    tabContents.map((tab, index) => {
+                                        return (
+                                            <Tab.Pane eventKey={tab.title} id={tab.id} key={index} style={{ height: "100%" }}>
+                                                <Row style={{ height: "100%" }}>
+                                                    <Col sm="12" >
+                                                        {tab.text}
+                                                    </Col>
+                                                </Row>
+                                            </Tab.Pane>
+                                        );
+                                    })
+                                }
                             </Tab.Content>
                         </Col>
                     </Tab.Container>
-                    {
+                    {/* {
                         showAlert &&
                         <Snackbar open={showAlert} autoHideDuration={5000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
                             <MyMuiAlert onClose={handleAlertClose} severity={alertType} sx={{ width: '100%' }}>
                                 {alertMessage}
                             </MyMuiAlert>
                         </Snackbar>
-                    }
+                    } */}
                 </Modal.Body>
             </Modal>
         </>

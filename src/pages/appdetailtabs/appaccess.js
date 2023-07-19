@@ -334,7 +334,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                     </div>
                 )}
                 <Card.Body>
-                    <Accordion defaultExpanded={true} onChange={handleChangefordomin} className='mb-2'>
+                    <Accordion /*defaultExpanded={true}*/ expanded={true} /*onChange={handleChangefordomin}*/ className='mb-2'>
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
                             aria-controls="panel1a-content"

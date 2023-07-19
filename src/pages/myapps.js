@@ -81,10 +81,11 @@ const UninstallConform = (props): React$Element<React$FragmentType> => {
                     try {
                         setDisable(true);
                         //调用卸载应用接口
-                        const response = await AppUninstall({ app_id: props.app.app_id });
-                        if (response.data.Error) {
+                        let response = await AppUninstall({ app_id: props.app.app_id });
+                        response = JSON.parse(response);
+                        if (response.Error) {
                             setShowAlert(true);
-                            setAlertMessage(response.data.Error.Message);
+                            setAlertMessage(response.Error.Message);
                         }
                         else {
                             closeAllModals(); //关闭弹窗并更新数据
@@ -303,11 +304,12 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
         setIsLoading(true);
         try {
-            const response = await appActions[label].api({ app_id: app.app_id });
-            if (response.data.Error) {
+            let response = await appActions[label].api({ app_id: app.app_id });
+            response = JSON.parse(response);
+            if (response.Error) {
                 setShowAlert(true);
                 setAlertType("error")
-                setAlertMessage(response.data.Error.Message);
+                setAlertMessage(response.Error.Message);
             }
             else {
                 setShowAlert(true);
