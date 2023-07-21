@@ -2,3 +2,6 @@
 
 ossutil64
 node_modules
+build
+myapps
+myapps-*.zip
