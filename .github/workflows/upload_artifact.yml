@@ -60,6 +60,8 @@ jobs:
       - name: Create Zip Archive
         run: |
           mv build myapps
+          cp myapps.json myapps
+          cp CHANGELOG.md myapps
           zip -r myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip myapps/
 
       - name: Upload To Azure Blob
