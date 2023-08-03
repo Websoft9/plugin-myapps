@@ -384,7 +384,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                             {filteredApps.map((app, i) => {
                                 return (
                                     <Col xxl={2} md={3} key={app.app_id + i} className="appstore-item">
-                                        <div className='appstore-item-content highlight text-align-center' onClick={() => { handleClick(app) }}>
+                                        <div className='appstore-item-content highlight text-align-center' onClick={() => { official_app && handleClick(app) }}>
                                             {
                                                 (!official_app && (app.status === "running" || app.status === "exited")) &&
                                                 <Dropdown className="float-end">

@@ -3,21 +3,9 @@ import cockpit from 'cockpit';
 var IP;
 
 class APICore {
-    getIp = async () => {
-        if (!IP) {
-            cockpit.spawn(["docker", "inspect", "-f", "{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}", "websoft9-appmanage"]).then((data) => {
-                IP = data.trim();
-            }).catch((error) => {
-                throw new Error(`Docker command failed: ${error}`);
-            })
-        }
-        return IP;
-    }
-
     get = async (url, params) => {
-        await this.getIp();
         let http = response = cockpit.http({
-            "address": IP,
+            "address": "websoft9-appmanage",
             "port": 5000,
         });
 

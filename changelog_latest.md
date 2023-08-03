@@ -1,2 +1,1 @@
-1. Welcome to the My Apps
-2. My Apps Initial Version
+1. Added expiration verification for JWT calling the Portainer API

@@ -2,6 +2,7 @@ import MuiAlert from '@mui/material/Alert';
 import axios from 'axios';
 import classnames from "classnames";
 import cockpit from 'cockpit';
+import jwt_decode from 'jwt-decode';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Col, Modal, Nav, OverlayTrigger, Row, Tab, Tooltip } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -41,7 +42,13 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const protocol = window.location.protocol;
     const host = window.location.host;
     const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
-    const [portainerJwt, setPortainerJwt] = useState(null);
+    let portainerjwt = window.localStorage.getItem("portainer.JWT"); //获取存储在本地的JWT数据 
+
+    function isTokenExpired(token) {
+        const decodedToken = jwt_decode(token);
+        const currentTime = Math.floor(Date.now() / 1000);
+        return decodedToken.exp < currentTime;
+    }
 
     const handleAlertClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -51,38 +58,46 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         setAlertMessage("");
     };
 
+    const getJwt = async () => {
+        var response = await AppSearchUsers({ "plugin_name": "portainer" });
+        response = JSON.parse(response);
+        if (response.Error) {
+            throw new Error("Request portainer user info failed.");
+        }
+        else {
+            var authResponse = await axios.post(baseURL + "/portainer/api/auth", {
+                username: response.ResponseData.user?.user_name,
+                password: response.ResponseData.user?.password
+            })
+            if (authResponse.status === 200) {
+                portainerjwt = "\"" + authResponse.data.jwt + "\"";
+                window.localStorage.setItem('portainer\.JWT', portainerjwt);
+            } else {
+                throw new Error("Request portainer tokens failed.");
+            }
+        }
+    }
+
     //通过Portainer的接口获取容器数据
     const getContainersData = async () => {
         try {
-            var jwt = window.localStorage.getItem("portainer.JWT"); //获取存储在本地的JWT数据 
             var id = null;
 
             //如果获取不到jwt，则模拟登录并写入新的jwt
-            if (jwt === null) {
-                var response = await AppSearchUsers({ "plugin_name": "portainer" });
-                response = JSON.parse(response);
-                if (response.Error) {
-                    throw new Error("Request portainer user info failed.");
-                }
-                else {
-                    var authResponse = await axios.post(baseURL + "/portainer/api/auth", {
-                        username: response.ResponseData.user?.user_name,
-                        password: response.ResponseData.user?.password
-                    })
-                    if (authResponse.status === 200) {
-                        jwt = "\"" + authResponse.data.jwt + "\"";
-                        window.localStorage.setItem('portainer\.JWT', jwt);
-                    } else {
-                        throw new Error("Request portainer tokens failed.");
-                    }
+            if (!portainerjwt) {
+                await getJwt();
+            }
+            else {
+                const isExpired = isTokenExpired(portainerjwt);
+                if (isExpired) { //如果已经过期，重新生成JWT
+                    await getJwt();
                 }
             }
-            setPortainerJwt(jwt.replace(/"/g, ''));
 
             //从portainer接口获取endpoints
             const endpointsData = await axios.get(baseURL + '/portainer/api/endpoints', {
                 headers: {
-                    'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
+                    'Authorization': 'Bearer ' + portainerjwt.replace(/"/g, '')
                 }
             })
             if (endpointsData.status === 200) {
@@ -96,7 +111,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                                 EndpointCreationType: 1
                             },
                             headers: {
-                                'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
+                                'Authorization': 'Bearer ' + portainerjwt.replace(/"/g, '')
                             }
                         }
                     )
@@ -116,7 +131,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                 //调用Portainer接口获取容器数据
                 const containersData = await axios.get(baseURL + `/portainer/api/endpoints/${id}/docker/containers/json`, {
                     headers: {
-                        'Authorization': 'Bearer ' + jwt.replace(/"/g, '')
+                        'Authorization': 'Bearer ' + portainerjwt.replace(/"/g, '')
                     },
                     params: {
                         all: true,
@@ -138,10 +153,9 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             }
         }
         catch (error) {
-            console.log(error);
-            // setShowAlert(true);
-            // setAlertType("error")
-            // setAlertMessage(error);
+            setShowAlert(true);
+            setAlertType("error")
+            setAlertMessage(error);
         }
     }
 
@@ -195,20 +209,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             icon: 'mdi dripicons-stack',
             text: <AppContainer customer_name={customer_name} endpointsId={endpointsId} containersInfo={containersInfo} />,
         },
-        // {
-        //     id: '4',
-        //     title: _("Terminal"),
-        //     icon: 'mdi dripicons-stack',
-        //     text: <AppTerminal endpointsId={endpointsId} containerId={mainContainerId} baseURL={baseURL} />
-        // },
-        // {
-        //     id: '4',
-        //     title: _("Terminal"),
-        //     icon: 'mdi dripicons-stack',
-        //     text: <AppTerminal endpointId={endpointsId} containerId={mainContainerId} token={portainerJwt} />
-        // },
         {
-            id: '5',
+            id: '4',
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
             text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}

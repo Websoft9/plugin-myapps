@@ -59,17 +59,23 @@ jobs:
           
       - name: Create Zip Archive
         run: |
+          mkdir artifacts
           mv build myapps
           cp myapps.json myapps
           cp CHANGELOG.md myapps
+          cp -r docs myapps
+          rsync -av --exclude='changelog_latest.md' *.md myapps/
           zip -r myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip myapps/
+          cp CHANGELOG.md artifacts/
+          cp appstore.json artifacts/          
+          mv myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip artifacts/
 
       - name: Upload To Azure Blob
         uses: LanceMcCarthy/Action-AzureBlobUpload@v2
         with:
           connection_string: ${{ secrets.AZURE_STORAGE_ARTIFACT }}
           container_name: release
-          source_folder: myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip
+          source_folder: artifacts/
           destination_folder: ./websoft9/plugin/myapps
           delete_if_exists: true
           fail_if_source_empty: true

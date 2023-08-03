@@ -1,4 +1,3 @@
-const CockpitRsyncPlugin = require("./src/lib/cockpit-rsync-plugin");
 
 const {
     override,
