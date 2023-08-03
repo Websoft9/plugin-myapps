@@ -67,7 +67,7 @@ jobs:
           rsync -av --exclude='changelog_latest.md' *.md myapps/
           zip -r myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip myapps/
           cp CHANGELOG.md artifacts/
-          cp appstore.json artifacts/          
+          cp myapps.json artifacts/
           mv myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip artifacts/
 
       - name: Upload To Azure Blob
