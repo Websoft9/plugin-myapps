@@ -3,7 +3,7 @@ name: Build New Version For Dev
 on: workflow_dispatch
 
 jobs:
-  Build_Plugin_For_Dev:
+  Build_New_Version_For_Dev:
     runs-on: ubuntu-latest
     env:
       CI: false
