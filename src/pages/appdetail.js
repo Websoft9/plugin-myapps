@@ -32,7 +32,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const navigate = useNavigate(); //用于页面跳转
     const childRef = useRef();
     const [containersInfo, setContainersInfo] = useState([]);
-    const customer_name = props.current_app.customer_name;
+    const customer_name = props?.current_app?.customer_name;
     const [endpointsId, setEndpointsId] = useState(null);
     const [mainContainerId, setMainContainerId] = useState(null);
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
@@ -42,7 +42,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const protocol = window.location.protocol;
     const host = window.location.host;
     const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
-    let portainerjwt = window.localStorage.getItem("portainer.JWT"); //获取存储在本地的JWT数据 
+    //let portainerjwt = window.localStorage.getItem("portainer.JWT"); //获取存储在本地的JWT数据 
+    let portainerjwt = window.sessionStorage.getItem("portainerJWT"); //获取存储在本地的JWT数据 
 
     function isTokenExpired(token) {
         const decodedToken = jwt_decode(token);
@@ -70,8 +71,10 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                 password: response.ResponseData.user?.password
             })
             if (authResponse.status === 200) {
-                portainerjwt = "\"" + authResponse.data.jwt + "\"";
-                window.localStorage.setItem('portainer\.JWT', portainerjwt);
+                //portainerjwt = "\"" + authResponse.data.jwt + "\"";
+                portainerjwt = authResponse.data.jwt;
+                //window.localStorage.setItem('portainer\.JWT', portainerjwt);
+                window.sessionStorage.setItem('portainerJWT', portainerjwt);
             } else {
                 throw new Error("Request portainer tokens failed.");
             }
@@ -97,7 +100,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             //从portainer接口获取endpoints
             const endpointsData = await axios.get(baseURL + '/portainer/api/endpoints', {
                 headers: {
-                    'Authorization': 'Bearer ' + portainerjwt.replace(/"/g, '')
+                    'Authorization': 'Bearer ' + portainerjwt
                 }
             })
             if (endpointsData.status === 200) {
@@ -111,7 +114,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                                 EndpointCreationType: 1
                             },
                             headers: {
-                                'Authorization': 'Bearer ' + portainerjwt.replace(/"/g, '')
+                                'Authorization': 'Bearer ' + portainerjwt
                             }
                         }
                     )
@@ -131,7 +134,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                 //调用Portainer接口获取容器数据
                 const containersData = await axios.get(baseURL + `/portainer/api/endpoints/${id}/docker/containers/json`, {
                     headers: {
-                        'Authorization': 'Bearer ' + portainerjwt.replace(/"/g, '')
+                        'Authorization': 'Bearer ' + portainerjwt
                     },
                     params: {
                         all: true,

@@ -16,12 +16,13 @@ const UninstallConform = (props) => {
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
 
     function closeAllModals() {
-        //关闭弹窗
-        props.onClose();
-        props.onCloseFatherModal();
-
         //更新主页APP的数据
-        props.onDataChange();
+        //props.onDataChange();
+
+        //关闭弹窗
+        //props.onClose();
+        //props.onCloseFatherModal();
+        window.location.reload(true);
     }
 
     return (
