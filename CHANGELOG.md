@@ -1,3 +1,5 @@
+## 0.0.4 release on 2023-08-11
+1. Fix some known bugs
 ## 0.0.3 release on 2023-08-03
 1. Added expiration verification for JWT calling the Portainer API
 ## 0.0.3 release on 2023-08-03
