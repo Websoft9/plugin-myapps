@@ -1,1 +1,1 @@
-1. Added expiration verification for JWT calling the Portainer API
+1. Fix some known bugs
