@@ -1,3 +1,5 @@
+## 0.0.5 release on 2023-08-12
+1. Fix some known bugs
 ## 0.0.4 release on 2023-08-11
 1. Fix some known bugs
 ## 0.0.3 release on 2023-08-03
