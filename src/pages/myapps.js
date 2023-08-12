@@ -55,8 +55,9 @@ const UninstallConform = (props): React$Element<React$FragmentType> => {
 
     function closeAllModals() {
         //关闭所有弹窗
-        props.onClose();
-        props.onDataChange();
+        // props.onClose();
+        // props.onDataChange();
+        window.location.reload(true);
     }
 
     return (

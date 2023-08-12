@@ -13,8 +13,6 @@ import AppAccess from './appdetailtabs/appaccess';
 import AppContainer from './appdetailtabs/appcontainer';
 import AppOverview from './appdetailtabs/appoverview';
 import Uninstall from './appdetailtabs/appuninstall';
-//import AppTerminal from './myterminal';
-//import AppTerminal from './appdetailtabs/appterminal';
 
 const _ = cockpit.gettext;
 
@@ -42,8 +40,19 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const protocol = window.location.protocol;
     const host = window.location.host;
     const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
-    //let portainerjwt = window.localStorage.getItem("portainer.JWT"); //获取存储在本地的JWT数据 
-    let portainerjwt = window.sessionStorage.getItem("portainerJWT"); //获取存储在本地的JWT数据 
+    let portainerjwt = null;
+
+    //获取cookie
+    function getCookieValue(cookieName) {
+        const cookies = document.cookie.split('; ');
+        for (const cookie of cookies) {
+            const [name, value] = cookie.split('=');
+            if (name === cookieName) {
+                return decodeURIComponent(value);
+            }
+        }
+        return null; // 如果没有找到该 Cookie 返回 null
+    }
 
     function isTokenExpired(token) {
         const decodedToken = jwt_decode(token);
@@ -71,10 +80,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                 password: response.ResponseData.user?.password
             })
             if (authResponse.status === 200) {
-                //portainerjwt = "\"" + authResponse.data.jwt + "\"";
                 portainerjwt = authResponse.data.jwt;
-                //window.localStorage.setItem('portainer\.JWT', portainerjwt);
-                window.sessionStorage.setItem('portainerJWT', portainerjwt);
+                document.cookie = "portainerJWT=" + portainerjwt + ";path=/";
             } else {
                 throw new Error("Request portainer tokens failed.");
             }
@@ -85,7 +92,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const getContainersData = async () => {
         try {
             var id = null;
-
+            portainerjwt = getCookieValue("portainerJWT");
             //如果获取不到jwt，则模拟登录并写入新的jwt
             if (!portainerjwt) {
                 await getJwt();
