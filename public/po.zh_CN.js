@@ -414,7 +414,14 @@
     "Overview": [
         null,
         "概览"
+    ],
+    "No apps installed yet!": [
+        null,
+        "尚未安装任何应用程序！"
+    ],
+    "How about installing some? Check out the ": [
+        null,
+        "安装应用请转到 "
     ]
-
 }));
 

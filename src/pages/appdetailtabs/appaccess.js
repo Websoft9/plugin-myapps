@@ -345,9 +345,6 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                 <span className="me-2 fs-6" style={{ display: isExpandedForDomain ? 'inline' : 'none' }}>
                                     {_("Access the domain name for better application performance, https and custom configuration can click")}
                                     {" "}
-                                    {/* <a href="/nginx" target="_parent">
-                                        {_("more")}
-                                    </a> */}
                                     <a href="#" onClick={(e) => {
                                         e.preventDefault();
                                         let url = `nginx#/nginxproxymanager/nginx/proxy`;

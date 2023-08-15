@@ -376,7 +376,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     // 过滤出符合条件的apps
                     const filteredApps = apps.filter((app) => selectedStatus === 'all' || app.status === selectedStatus)
                         .filter((app) => app.official_app === official_app)
-                        .filter((app) => app.customer_name.includes(searchString));
+                        .filter((app) => app.customer_name.toLowerCase().includes(searchString.toLowerCase()));
                     // 如果有数据，返回一个Row组件，否则返回null
                     return filteredApps.length > 0 ? (
                         <Row>
@@ -466,6 +466,27 @@ const MyApps = (): React$Element<React$FragmentType> => {
                         </Row >
                     ) : null;
                 })
+            }
+            {
+                apps.length <= 0 && (
+                    <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px" }}>
+                        <h3>{_("No apps installed yet!")}</h3>
+                        <br></br>
+                        <h4>
+                            {_("How about installing some? Check out the ")}
+                            <a href="#" onClick={(e) => {
+                                e.preventDefault();
+                                let url = 'appstore';
+                                cockpit.file('/etc/hostname').watch(content => {
+                                    console.log(content);
+                                });
+                                cockpit.jump(url);
+                            }} >
+                                {_("App Store")}
+                            </a>
+                        </h4>
+                    </div>
+                )
             }
             {
                 showModal && <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
