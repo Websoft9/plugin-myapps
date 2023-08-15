@@ -313,7 +313,7 @@
     ],
     "App Overview": [
         null,
-        "应用预览"
+        "应用概览"
     ],
     "App Name": [
         null,
@@ -413,7 +413,7 @@
     ],
     "Overview": [
         null,
-        "预览"
+        "概览"
     ]
 
 }));
