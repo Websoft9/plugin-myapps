@@ -1,3 +1,5 @@
+## 0.0.7 release on 2023-08-16
+1. Fix the issue of refreshing after uninstalling the application
 ## 0.0.6 release on 2023-08-15
 1. Optimize multilingual
 ## 0.0.5 release on 2023-08-12
