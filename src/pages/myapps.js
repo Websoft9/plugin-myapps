@@ -204,8 +204,39 @@ const MyApps = (): React$Element<React$FragmentType> => {
         getAllAppsOnce();
     }, []);
 
+    // useEffect(() => {
+    //     getAllApps();
+    // }, []);
+
     useEffect(() => {
-        getAllApps();
+        setLoading(true);
+        //调用接口获取已经安装应用
+        const timer = setInterval(() => {
+            AppList().then((response) => {
+                response = JSON.parse(response);
+                if (response.Error) {
+                    setCode(response.Error.Code);
+                    setError(response.Error.Message);
+                    setErrorDetails(response.Error.Details);
+                }
+                else {
+                    const newApps = response.ResponseData;
+                    setApps(newApps);
+                    if (selectedAppRef.current) {
+                        const updatedApp = newApps.find(
+                            (app) => app.app_id === selectedAppRef.current.app_id
+                        );
+                        setSelectedApp(updatedApp);
+                    }
+                }
+                setLoading(false);
+            }).catch((error) => {
+                <Navigate to="/error-500" />
+            });
+        }, 5000);
+
+        // 当组件卸载时，清除定时器
+        return () => clearInterval(timer);
     }, []);
 
     useEffect(() => {
@@ -442,8 +473,8 @@ const MyApps = (): React$Element<React$FragmentType> => {
                                             }
                                             <div>
                                                 <img
-                                                    src={`./static/logos/${app.app_name}-websoft9.png`}
-                                                    alt={app.app_name}
+                                                    src={`./static/logos/${app?.app_name}-websoft9.png`}
+                                                    alt={app?.app_name}
                                                     className="app-icon"
                                                     style={{ margin: "20px 10px 20px 10px" }}
                                                     onError={(e) => (e.target.src = DefaultImg)}
@@ -489,7 +520,8 @@ const MyApps = (): React$Element<React$FragmentType> => {
                 )
             }
             {
-                showModal && <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
+                showModal && selectedApp &&
+                <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
             }
             {
                 showUninstallConform &&

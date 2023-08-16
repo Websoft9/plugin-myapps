@@ -1,1 +1,1 @@
-1. Optimize multilingual
+1. Fix the issue of refreshing after uninstalling the application
