@@ -127,6 +127,10 @@
         null,
         "访问"
     ],
+    "access": [
+        null,
+        "访问"
+    ],
     "Backups": [
         null,
         "备份"

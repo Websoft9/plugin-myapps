@@ -1,1 +1,1 @@
-1. Fix the issue of refreshing after uninstalling the application
+1. Fix some known bugs

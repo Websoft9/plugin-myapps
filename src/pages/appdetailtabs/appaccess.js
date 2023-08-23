@@ -54,17 +54,15 @@ const RemoveDomain = (props): React$Element<React$FragmentType> => {
                 <Button disabled={disable} variant="warning" onClick={async () => {
                     try {
                         setDisable(true);
-                        AppDomainDelete({ app_id: props.deleteRowData.app_id, domain: props.deleteRowData.domainValue }).then((response) => {
-                            response = JSON.parse(response);
-                            if (response.Error) {
-                                setShowAlert(true);
-                                setAlertMessage(response.Error.Message);
-                            }
-                            else { //删除成功
-                                setDisable(false);
-                                closeAllModals();
-                            }
-                        })
+                        let response = await AppDomainDelete({ app_id: props.deleteRowData.app_id, domain: props.deleteRowData.domainValue });
+                        response = JSON.parse(response);
+                        if (response.Error) {
+                            setShowAlert(true);
+                            setAlertMessage(response.Error.Message);
+                        }
+                        else { //删除成功
+                            closeAllModals();
+                        }
                     }
                     catch (error) {
                         navigate("/error-500");
@@ -98,34 +96,33 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
 
     const getDomains = async () => {
         try {
-            await AppDomainList({ app_id: props.data.app_id }).then((response) => {
-                response = JSON.parse(response);
-                if (response.Error) {
-                    setShowAlert(true);
-                    setAlertType("error")
-                    setAlertMessage(response.Error.Message);
-                }
-                else {
-                    let responseData = response.ResponseData.Domain_set;
-                    let defaultdomain = responseData.default_domain; //获取返回的默认域名数据
+            let response = await AppDomainList({ app_id: props.data.app_id });
+            response = JSON.parse(response);
+            if (response.Error) {
+                setShowAlert(true);
+                setAlertType("error")
+                setAlertMessage(response.Error.Message);
+            }
+            else {
+                let responseData = response.ResponseData.Domain_set;
+                let defaultdomain = responseData.default_domain; //获取返回的默认域名数据
 
-                    let resturnDomains = responseData.domains.map(domain => {
-                        return {
-                            app_id: props.data.app_id,
-                            domainValue: domain,
-                            newDomainValue: domain,
-                            isEditable: false,
-                            isFromAPI: true,
-                            isDefaultDomain: domain === defaultdomain ? true : false
-                        };
-                    });
-                    //排序：将默认域名放前面
-                    resturnDomains.sort((a, b) => {
-                        return b.isDefaultDomain - a.isDefaultDomain;
-                    });
-                    setDomains(resturnDomains);
-                }
-            })
+                let resturnDomains = responseData.domains.map(domain => {
+                    return {
+                        app_id: props.data.app_id,
+                        domainValue: domain,
+                        newDomainValue: domain,
+                        isEditable: false,
+                        isFromAPI: true,
+                        isDefaultDomain: domain === defaultdomain ? true : false
+                    };
+                });
+                //排序：将默认域名放前面
+                resturnDomains.sort((a, b) => {
+                    return b.isDefaultDomain - a.isDefaultDomain;
+                });
+                setDomains(resturnDomains);
+            }
         }
         catch (error) {
             console.log(error);
@@ -188,21 +185,19 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
         const defaultDomain = domains[index].newDomainValue; //获取域名
         setLoading(true);
         try {  //调用设定默认域名接口
-            AppDomainSet({ app_id: props.data.app_id, domain: defaultDomain }).then((response) => {
-                response = JSON.parse(response);
-                if (response.Error) {
-                    setShowAlert(true);
-                    setAlertType("error")
-                    setAlertMessage(response.Error.Message);
-                }
-                else {
-                    setShowAlert(true);
-                    setAlertType("success")
-                    setAlertMessage(_("Success"));
-                    getDomains();
-                }
-            })
-
+            let response = await AppDomainSet({ app_id: props.data.app_id, domain: defaultDomain });
+            response = JSON.parse(response);
+            if (response.Error) {
+                setShowAlert(true);
+                setAlertType("error")
+                setAlertMessage(response.Error.Message);
+            }
+            else {
+                setShowAlert(true);
+                setAlertType("success")
+                setAlertMessage(_("Success"));
+                getDomains();
+            }
         }
         catch (error) {
             navigate("/error-500");
@@ -223,20 +218,19 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                     if (row.domainValue != row.newDomainValue) { //如果修改前的数据不等于修改后的数据，则调用修改接口
                         setLoading(true);
                         try {
-                            AppDomainUpdate({ app_id: props.data.app_id, domain_old: row.domainValue, domain_new: value }).then((response) => {
-                                response = JSON.parse(response);
-                                if (response.Error) {
-                                    setShowAlert(true);
-                                    setAlertType("error")
-                                    setAlertMessage(response.Error.Message);
-                                }
-                                else {
-                                    setShowAlert(true);
-                                    setAlertType("success")
-                                    setAlertMessage(_("Success"));
-                                    getDomains();
-                                }
-                            })
+                            let response = await AppDomainUpdate({ app_id: props.data.app_id, domain_old: row.domainValue, domain_new: value });
+                            response = JSON.parse(response);
+                            if (response.Error) {
+                                setShowAlert(true);
+                                setAlertType("error")
+                                setAlertMessage(response.Error.Message);
+                            }
+                            else {
+                                setShowAlert(true);
+                                setAlertType("success")
+                                setAlertMessage(_("Success"));
+                                getDomains();
+                            }
                         }
                         catch (error) {
                             navigate("/error-500");
@@ -254,20 +248,20 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                 else { //如果取到isFromAPI为false,表示是绑定数据 
                     try {
                         setLoading(true);
-                        AppDomainAdd({ app_id: props.data.app_id, domains: value }).then((response) => {
-                            response = JSON.parse(response);
-                            if (response.Error) {
-                                setShowAlert(true);
-                                setAlertType("error")
-                                setAlertMessage(response.Error.Message);
-                            }
-                            else {
-                                setShowAlert(true);
-                                setAlertType("success")
-                                setAlertMessage(_("Success"));
-                                getDomains();
-                            }
-                        })
+                        let response = await AppDomainAdd({ app_id: props.data.app_id, domains: value });
+                        response = JSON.parse(response);
+                        if (response.Error) {
+                            setShowAlert(true);
+                            setAlertType("error")
+                            setAlertMessage(response.Error.Message);
+                        }
+                        else {
+                            setShowAlert(true);
+                            setAlertType("success")
+                            setAlertMessage(_("Success"));
+                            getDomains();
+                        }
+
                     }
                     catch (error) {
                         navigate("/error-500");
