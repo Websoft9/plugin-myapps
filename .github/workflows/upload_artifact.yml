@@ -1,6 +1,10 @@
-name: Build New Version For Release
+name: myapps Release
 
-on: workflow_dispatch
+on:
+  push:
+    branches: [main]
+    paths:
+      - "myapps.json"
 
 jobs:
   Build_New_Version_For_Release:
@@ -22,15 +26,21 @@ jobs:
       - name: Build
         run: yarn build
 
-      - name: Copy logos to build
-        run: cp -R logos/  build/static/
-
       - name: Update CHANGELOG.md and public/manifest.json
         id: update_data
         run: |
           version=$(jq -r '.Version' myapps.json)
           echo "PLUGIN_VERSION=$version" >> $GITHUB_OUTPUT
-          
+          real_version=${version%%-*}
+          echo "VERSION=$real_version" >> $GITHUB_ENV
+          echo "RC_VERSION=$version" >> $GITHUB_ENV
+          if [[ $version == *-* ]]; then
+            echo "release version"
+            echo "::set-output name=release::false"
+          else
+            echo "rc release version"
+            echo "::set-output name=release::true"
+          fi                    
           changelog=$(cat changelog_latest.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT 
           echo "$changelog" >> $GITHUB_OUTPUT 
@@ -41,32 +51,52 @@ jobs:
           mv temp.txt CHANGELOG.md
       
           jq -r --arg version "$version" '.version = $version' public/manifest.json > manifest.json.tmp
-          mv manifest.json.tmp public/manifest.json        
+          mv manifest.json.tmp public/manifest.json
           
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          files: /* 
-          tag_name: v${{ steps.update_data.outputs.PLUGIN_VERSION }}   
-          body: ${{ steps.update_data.outputs.CHANGELOG }}
-          draft: false
-          prerelease: true
+          commit_message: Build Plugin For Release
           
       - name: Create Zip Archive
         run: |
           mkdir artifacts
           mv build myapps
-          cp myapps.json myapps
           cp CHANGELOG.md myapps
+          cp myapps.json myapps
           cp -r docs myapps
           rsync -av --exclude='changelog_latest.md' *.md myapps/
-          zip -r myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip myapps/
+          zip -r myapps-${{ env.VERSION }}.zip myapps/
           cp CHANGELOG.md artifacts/
           cp myapps.json artifacts/
-          mv myapps-${{ steps.update_data.outputs.PLUGIN_VERSION }}.zip artifacts/
+          mv myapps-${{ env.VERSION }}.zip artifacts/
+          cp artifacts/myapps-${{ env.VERSION }}.zip artifacts/myapps-latest.zip
 
       - name: Upload To Azure Blob
         uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+        if: ${{ steps.update_data.outputs.release == 'false' }}
+        with:
+          connection_string: ${{ secrets.AZURE_STORAGE_ARTIFACT }}
+          container_name: dev
+          source_folder: artifacts/
+          destination_folder: ./websoft9/plugin/myapps
+          delete_if_exists: true
+          fail_if_source_empty: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.update_data.outputs.release == 'false' }}
+        with:
+          files: /*
+          tag_name: v${{ env.RC_VERSION }}
+          title: Release-v${{ env.RC_VERSION }}
+          body: ${{ steps.update_data.outputs.CHANGELOG }}
+          draft: false
+          prerelease: false
+
+      - name: Upload To Azure Blob
+        uses: LanceMcCarthy/Action-AzureBlobUpload@v2
+        if: ${{ steps.update_data.outputs.release == 'true' }}
         with:
           connection_string: ${{ secrets.AZURE_STORAGE_ARTIFACT }}
           container_name: release
@@ -75,7 +105,14 @@ jobs:
           delete_if_exists: true
           fail_if_source_empty: true
 
-      - name: Commit and push changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.update_data.outputs.release == 'true' }}
         with:
-          commit_message: Build Plugin For Release
+          files: /*
+          tag_name: v${{ env.VERSION }}
+          title: Release-v${{ env.VERSION }}
+          body: ${{ steps.update_data.outputs.CHANGELOG }}
+          draft: false
+          prerelease: false
