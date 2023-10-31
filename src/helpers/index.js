@@ -1,1 +1,1 @@
-export * from './api_appmanage/';
+export * from './api_apphub';

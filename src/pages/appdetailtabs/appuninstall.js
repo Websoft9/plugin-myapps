@@ -1,12 +1,18 @@
+import MuiAlert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import classNames from 'classnames';
 import cockpit from 'cockpit';
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { Alert, Button, Col, Modal, Row } from 'react-bootstrap';
+import { Button, Col, Form, Modal, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../../components/Spinner';
-import { AppStart, AppStop, AppUninstall } from '../../helpers';
+import { UninstallApp } from '../../helpers';
 
 const _ = cockpit.gettext;
+
+const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 //卸载应用时的确定/取消弹窗
 const UninstallConform = (props) => {
@@ -14,6 +20,8 @@ const UninstallConform = (props) => {
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
+    const [purgeData, setPurgeData] = useState(false); //卸载时是否保留数据
+    const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
 
     function closeAllModals() {
         //更新主页APP的数据
@@ -25,46 +33,78 @@ const UninstallConform = (props) => {
         //window.location.reload(true);
     }
 
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setShowAlert(false);
+        setAlertMessage("");
+    };
+
     return (
-        <Modal show={props.showConform} onHide={props.onClose} size="lg"
-            scrollable="true" backdrop="static" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
-            <Modal.Header onHide={props.onClose} closeButton className={classNames('modal-colored-header', 'bg-warning')}>
-                <h4>{_("Uninstall")} {props.app.customer_name}</h4>
-            </Modal.Header>
-            <Modal.Body className="row" >
-                <span style={{ margin: "10px 0px" }}>{_("This will immediately uninstall")} {props.app.customer_name} {_("and remove all its data.")}</span>
-                <div>
-                    {showAlert && <Alert variant="danger" className="my-2">
-                        {alertMessage}
-                    </Alert>}
-                </div>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="light" onClick={props.onClose}>
-                    {_("Close")}
-                </Button>{" "}
-                <Button disabled={disable} variant="warning" onClick={async () => {
-                    try {
+        <>
+            <Modal show={props.showConform} onHide={props.onClose} size="lg"
+                scrollable="true" backdrop="static" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+                <Modal.Header onHide={props.onClose} className={classNames('modal-colored-header', 'bg-warning')}>
+                    <h4>{_("Uninstall")} {props.app.app_id}</h4>
+                </Modal.Header>
+                <Modal.Body className="row" >
+                    <span style={{ margin: "10px 0px" }}>{_("This will immediately uninstall the app, If the data is preserved, the app can be redeploy.")}</span>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        {_("Do you want to purge the data:")}
+                        <Form>
+                            <Form.Check
+                                type="switch"
+                                id="custom-switch"
+                                checked={purgeData}
+                                onChange={() => setPurgeData(!purgeData)}
+                            />
+                        </Form>
+                    </div>
+
+                </Modal.Body>
+                <Modal.Footer>
+                    {
+                        showCloseButton && (
+                            <Button variant="light" onClick={props.onClose}>
+                                {_("Close")}
+                            </Button>
+                        )}
+                    {" "}
+                    <Button disabled={disable} variant="warning" onClick={async () => {
                         setDisable(true);
+                        setShowCloseButton(false);
+                        props.disableButton();
                         //调用卸载应用接口
-                        let response = await AppUninstall({ app_id: props.app.app_id });
-                        response = JSON.parse(response);
-                        if (response.Error) {
+                        try {
+                            await UninstallApp(props.app.app_id, { purge_data: purgeData });
+                            closeAllModals();
+                        }
+                        catch (error) {
                             setShowAlert(true);
-                            setAlertMessage(response.Error.Message);
+                            setAlertMessage(error.message);
                         }
-                        else {
-                            closeAllModals(); //关闭弹窗并更新数据
+                        finally {
+                            props.enableButton();
+                            setDisable(false);
+                            setShowCloseButton(true);
                         }
                     }
-                    catch (error) {
-                        navigate("/error-500");
-                    }
-                }}>
-                    {disable && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />} {_("Uninstall")}
-                </Button>
-            </Modal.Footer>
-        </Modal >
+                    }>
+                        {disable && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />} {_("Uninstall")}
+                    </Button>
+                </Modal.Footer>
+            </Modal >
+            {
+                showAlert &&
+                <Snackbar open={showAlert} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                    <MyMuiAlert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+                        {alertMessage}
+                    </MyMuiAlert>
+                </Snackbar>
+            }
+        </>
+
     );
 }
 
@@ -101,7 +141,7 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
 
     return (
         <>
-            <Row className="mb-2">
+            {/* <Row className="mb-2">
                 <Col sm={12}>
                     <label className="me-1" style={{ fontWeight: "bolder", marginBottom: "5px" }}>{_("Start / Stop")}</label>
                     <p>
@@ -109,25 +149,19 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
                     </p>
                     {props.data.status === "running" ?
                         <Button variant="secondary" className="float-end" disabled={disable} onClick={async () => {
+                            props.disabledButton();
+                            setDisable(true);
+                            //调用应用停止接口
                             try {
-                                props.disabledButton();
-                                setDisable(true);
-                                //调用应用停止接口
-                                let response = await AppStop({ app_id: props.data.app_id });
-                                response = JSON.parse(response);
-                                if (response.Error) {
-                                    navigate("/error")
-                                }
-                                else {
-                                    props.onDataChange(props.data.app_id);
-                                }
+                                await StopApp({ app_id: props.data.app_id });
+                                props.onDataChange(props.data.app_id);
                             }
                             catch (error) {
                                 navigate("/error-500");
                             }
                             finally {
-                                setDisable(false);
                                 props.enableButton();
+                                setDisable(false);
                             }
                         }}>
                             {disable && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />} {_("Stop")}
@@ -138,7 +172,7 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
                                 props.disabledButton();
                                 setDisable(true);
                                 try {
-                                    let response = await AppStart({ app_id: props.data.app_id });
+                                    let response = await StartApp({ app_id: props.data.app_id });
                                     response = JSON.parse(response);
                                     if (response.Error) {
                                         navigate("/error")
@@ -160,20 +194,21 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
                     }
                 </Col>
             </Row>
-            <hr></hr>
+            <hr></hr> */}
             <Row className="mb-2">
                 <Col sm={12}>
                     <label className="me-1" style={{ fontWeight: "bolder", marginBottom: "5px" }}>{_("Uninstall")}</label>
                     <p>
-                        {_("This will uninstall the app immediately and remove all its data.The app will be inaccessible.")}
+                        {_("This will uninstall the app immediately.The app will be inaccessible.")}
                     </p>
-                    <Button variant="warning" className="float-end" onClick={() => { handleClick() }} >
+                    <Button variant="warning" className="float-end" disabled={disable} onClick={() => { handleClick() }} >
                         {_("Uninstall")}
                     </Button>
                 </Col>
             </Row>
             {showUninstallConform && <UninstallConform showConform={showUninstallConform} onClose={handleClose}
-                app={props.data} onDataChange={props.onDataChange} onCloseFatherModal={props.onCloseFatherModal} />}
+                app={props.data} onDataChange={props.onDataChange} onCloseFatherModal={props.onCloseFatherModal}
+                disableButton={props.disabledButton} enableButton={props.enableButton} />}
         </>
     );
 });

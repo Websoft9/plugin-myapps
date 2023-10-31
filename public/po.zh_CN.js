@@ -175,21 +175,17 @@
         null,
         "文档"
     ],
-    "This will immediately uninstall": [
+    "This will immediately uninstall the app, If the data is preserved, the app can be redeploy.": [
         null,
-        "这将马上卸载"
-    ],
-    "and remove all its data.": [
-        null,
-        "并且删除所有数据."
+        "这将马上卸载应用，如果保留数据，应用可以重新部署。"
     ],
     "Start / Stop": [
         null,
         "启动 / 停止"
     ],
-    "This will uninstall the app immediately and remove all its data.The app will be inaccessible.": [
+    "This will uninstall the app immediately.The app will be inaccessible.": [
         null,
-        "这将立即卸载应用程序并删除其所有数据,该应用程序将无法访问."
+        "这将立即卸载应用程序,该应用程序将无法访问."
     ],
     "Apps can be stopped to conserve server resources instead of uninstalling.": [
         null,
@@ -219,9 +215,9 @@
         null,
         "删除"
     ],
-    "This will immediately remove": [
+    "This will immediately remove the app and remove all its data.": [
         null,
-        "这将立马删除"
+        "这将立马删除应用，并将删除所有数据。"
     ],
     "Domain Binding": [
         null,
@@ -426,6 +422,43 @@
     "How about installing some? Check out the ": [
         null,
         "安装应用请转到 "
+    ],
+    "Redeploy": [
+        null,
+        "重建"
+    ],
+    "Redeploy App": [
+        null,
+        "重建应用"
+    ],
+    "Gitea": [
+        null,
+        "仓库"
+    ],
+    "This will be applied through local warehouse reconstruction. If the warehouse does not exist or there are errors in the warehouse file, the reconstruction will fail.": [
+        null,
+        "这将通过本地仓库重建应用，如果仓库不存在或者仓库文件错误则会重建失败。"
+    ],
+    "Do you want to purge the data:": [
+        null,
+        "是否清除数据："
+    ],
+    "Restart Success": [
+        null,
+        "应用重启成功"
+    ],
+    "Start Success": [
+        null,
+        "应用启动成功"
+    ],
+    "Stop Success": [
+        null,
+        "应用停止成功"
+    ],
+    "Re-pull image and redeploy:": [
+        null,
+        "重新提取镜像并重新部署："
     ]
 }));
+
 

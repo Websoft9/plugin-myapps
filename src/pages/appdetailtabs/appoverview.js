@@ -17,7 +17,7 @@ const AppOverview = (props): React$Element<React$FragmentType> => {
                             <tbody>
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("App Name")}:</td>
-                                    <td>{props.data?.app_name}</td>
+                                    <td>{props.data?.app_id}</td>
                                 </tr>
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("App Version")}:</td>
@@ -25,19 +25,19 @@ const AppOverview = (props): React$Element<React$FragmentType> => {
                                 </tr>
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("App Port")}:</td>
-                                    <td>{props.data?.config?.port}</td>
+                                    <td>{props.data?.app_port}</td>
                                 </tr>
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("Created Time")}:</td>
-                                    <td>{props.data?.create_time}</td>
+                                    <td>
+                                        {props.data?.creationDate
+                                            ? new Date(props.data.creationDate * 1000).toLocaleString()
+                                            : null}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("Config Path")}:</td>
                                     <td>{props.data?.config_path}</td>
-                                </tr>
-                                <tr>
-                                    <td style={{ fontWeight: "bold" }}>{_("Data Path")}:</td>
-                                    <td>{props.data?.volume_data}</td>
                                 </tr>
                             </tbody>
                         </Table>

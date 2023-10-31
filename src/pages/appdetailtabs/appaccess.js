@@ -8,10 +8,11 @@ import Typography from '@mui/material/Typography';
 import classNames from 'classnames';
 import cockpit from 'cockpit';
 import { default as React, useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
+import { Alert, Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import FormInput from '../../components/FormInput';
 import Spinner from '../../components/Spinner';
+import TagsInput from '../../components/TagsInput';
 import { AppDomainAdd, AppDomainDelete, AppDomainList, AppDomainSet, AppDomainUpdate } from '../../helpers';
 
 const _ = cockpit.gettext;
@@ -96,42 +97,22 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
 
     const getDomains = async () => {
         try {
-            let response = await AppDomainList({ app_id: props.data.app_id });
-            response = JSON.parse(response);
-            if (response.Error) {
-                setShowAlert(true);
-                setAlertType("error")
-                setAlertMessage(response.Error.Message);
-            }
-            else {
-                let responseData = response.ResponseData.Domain_set;
-                let defaultdomain = responseData.default_domain; //获取返回的默认域名数据
-
-                let resturnDomains = responseData.domains.map(domain => {
-                    return {
-                        app_id: props.data.app_id,
-                        domainValue: domain,
-                        newDomainValue: domain,
-                        isEditable: false,
-                        isFromAPI: true,
-                        isDefaultDomain: domain === defaultdomain ? true : false
-                    };
-                });
-                //排序：将默认域名放前面
-                resturnDomains.sort((a, b) => {
-                    return b.isDefaultDomain - a.isDefaultDomain;
-                });
-                setDomains(resturnDomains);
-            }
+            let domain_response = await AppDomainList(props.data.app_id);
+            setDomains(domain_response);
         }
         catch (error) {
-            console.log(error);
-            navigate("/error-500");
+            setShowAlert(true);
+            setAlertType("error")
+            setAlertMessage(error.message);
         }
     }
-
     useEffect(() => {
-        getDomains();
+        const fetchData = async () => {
+            setLoading(true);
+            await getDomains();
+            setLoading(false);
+        };
+        fetchData();
     }, []);
 
     //添加域名
@@ -341,9 +322,9 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                     {" "}
                                     <a href="#" onClick={(e) => {
                                         e.preventDefault();
-                                        let url = `nginx#/nginxproxymanager/nginx/proxy`;
-                                        cockpit.file('/etc/hostname').watch(content => {
-                                            console.log(content);
+                                        let url = `nginx#/w9proxy/nginx/proxy`;
+                                        cockpit.file('/etc/hosts').watch(content => {
+
                                         });
                                         cockpit.jump(url);
                                     }} >
@@ -381,51 +362,13 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                             <Row className="mb-2" key={index}>
                                                 <Col xs={12} className="d-flex justify-content-between">
                                                     <Col>
-                                                        <FormInput className="mb-2 mb-md-0" type="text"
-                                                            name={`domain-${index}`}
-                                                            value={row.newDomainValue}
-                                                            disabled={!row.isEditable}
-                                                            onChange={(e) => handleChange(index, e)} />
+                                                        <TagsInput initialTags={row.domain_names} />
                                                     </Col>
                                                     <Col className='col-auto ms-auto'>
-                                                        <Button variant="link text-danger" style={{ padding: "5px" }} onClick={() => deleteRow(row, index)}>
-                                                            {_("delete")}
+                                                        <Button variant="link text-primary" style={{ padding: "5px" }} onClick={() => editRow(index)}>
+                                                            {_("edit")}
                                                         </Button>
-                                                        {row.isEditable && row.isFromAPI && (
-                                                            <>
-                                                                <Button variant="link text-success" style={{ padding: "5px" }} onClick={() => saveRow(row, index)}>
-                                                                    {_("save")}
-                                                                </Button>
-                                                                <Button variant="link text-success" style={{ padding: "5px" }} onClick={() => cancelEditRow(index)}>
-                                                                    {_("cancel")}
-                                                                </Button>
-                                                            </>
-                                                        )}
-                                                        {row.isEditable && !row.isFromAPI && (
 
-                                                            <Button variant="link text-success" style={{ padding: "5px" }} onClick={() => saveRow(row, index)}>
-                                                                {_("save")}
-                                                            </Button>
-                                                        )}
-                                                        {!row.isEditable && (
-                                                            <>
-                                                                <Button variant="link text-primary" style={{ padding: "5px" }} onClick={() => editRow(index)}>
-                                                                    {_("edit")}
-                                                                </Button>
-                                                                <a href={'http://' + row.domainValue} target="_blank">
-                                                                    <Button variant="link text-primary" style={{ padding: "5px" }}>{_("access")}</Button>
-                                                                </a>
-                                                                {
-                                                                    row.isDefaultDomain ? (
-                                                                        <Badge className="ms-2 bg-success"> {_("default")} </Badge>
-                                                                    ) : (
-                                                                        <Button variant="link text-primary" onClick={() => setDefaultDomain(index)}>
-                                                                            {_("set as default")}
-                                                                        </Button>
-                                                                    )
-                                                                }
-                                                            </>
-                                                        )}
                                                     </Col>
                                                 </Col>
                                             </Row>

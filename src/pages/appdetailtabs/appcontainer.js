@@ -7,9 +7,9 @@ const _ = cockpit.gettext;
 
 const AppContainer = (props): React$Element<React$FragmentType> => {
     const navigate = useNavigate(); //用于页面跳转
-    const containersInfo = props.containersInfo;
-    const customer_name = props.customer_name;
-    const endpointsId = props.endpointsId;
+    const containersInfo = props.data.containers;
+    const app_id = props.data.app_id;
+    const endpointId = props.data.endpointId;
 
     return (
         <Row>
@@ -20,16 +20,16 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                             <Col xs={12} md={10}>
                                 <label className="me-2 fs-5 d-block">{_("Container")}</label>
                                 <span className="me-2 fs-6">
-                                    {cockpit.format(_("This application consists of the following containers, and the one named $0 is the main container."), customer_name)}
+                                    {cockpit.format(_("This application consists of the following containers, and the one named $0 is the main container."), app_id)}
                                 </span>
                             </Col>
                             <Col xs={12} md={2}>
-                                {/* <a href={`/portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`}
+                                {/* <a href={`/portainer/#!/${endpointId}/docker/stacks/${app_id}?type=2&regular=false&external=true&orphaned=false`}
                                     target="_parent" className="me-2">
                                     <Button variant="primary" size="sm" className="float-end">{_("More")}</Button>
                                 </a> */}
                                 <Button variant="primary" size="sm" className="float-end me-2" onClick={() => {
-                                    let url = `container#/portainer/#!/${endpointsId}/docker/stacks/${customer_name}?type=2&regular=false&external=true&orphaned=false`;
+                                    let url = `container#/w9deployment/#!/${endpointId}/docker/stacks/${app_id}?type=2&regular=false&external=true&orphaned=false`;
                                     cockpit.file('/etc/hostname').watch(content => {
                                         console.log(content);
                                     });
@@ -64,9 +64,9 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                             <td style={{ textAlign: 'center' }}>
                                                 <a href="#" onClick={(e) => {
                                                     e.preventDefault();
-                                                    let url = `container#/portainer/#!/${endpointsId}/docker/containers/${container.Id}/logs`;
-                                                    cockpit.file('/etc/hostname').watch(content => {
-                                                        console.log(content);
+                                                    let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/logs`;
+                                                    cockpit.file('/etc/hosts').watch(content => {
+
                                                     });
                                                     cockpit.jump(url);
                                                 }}
@@ -77,7 +77,7 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                     container.State === "running" && (
                                                         <a href="#" onClick={(e) => {
                                                             e.preventDefault();
-                                                            let url = `container#/portainer/#!/${endpointsId}/docker/containers/${container.Id}/stats`;
+                                                            let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/stats`;
                                                             cockpit.file('/etc/hostname').watch(content => {
                                                                 console.log(content);
                                                             });
@@ -91,7 +91,7 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                     container.State === "running" && (
                                                         <a href="#" onClick={(e) => {
                                                             e.preventDefault();
-                                                            let url = `container#/portainer/#!/${endpointsId}/docker/containers/${container.Id}/exec`;
+                                                            let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/exec`;
                                                             cockpit.file('/etc/hostname').watch(content => {
                                                                 console.log(content);
                                                             });
