@@ -192,9 +192,8 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    let timer;
-
     const getApps = async () => {
+        setError(null);
         try {
             const newApps = await Apps();
             const sortedApps = newApps.sort((a, b) => {
@@ -214,36 +213,41 @@ const MyApps = (): React$Element<React$FragmentType> => {
             setLoading(false);
         }
         catch (error) {
-            setError(error.message);
+            setError(error.message || "Internal Server Error");
         }
     }
 
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            await getApps();
-            setLoading(false);
-        };
-        fetchData();
-    }, []);
+        let timer = null;
 
-    useEffect(() => {
-        setLoading(true);
-        const timer = setInterval(async () => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                await getApps();
+                setLoading(false);
+            } catch (error) {
+                if (timer !== null) {
+                    clearInterval(timer);
+                }
+            }
+        };
+
+        fetchData();
+        timer = setInterval(async () => {
             await getApps();
         }, 5000);
-
-        // 当组件卸载时，清除定时器
-        return () => clearInterval(timer);
+        return () => {
+            if (timer !== null) {
+                clearInterval(timer);
+            }
+        };
     }, []);
+
 
     useEffect(() => {
         selectedAppRef.current = selectedApp;
     }, [selectedApp]);
 
-    useEffect(() => {
-        return () => clearInterval(timer);  //用于清除定时器
-    }, []);
 
     if (loading) return <Spinner className='dis_mid' />;
     if (error) return <p>Error : {error} </p>;

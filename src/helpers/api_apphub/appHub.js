@@ -44,11 +44,28 @@ function RestartApp(app_id: string, params: any): Promise<any> {
     return api.post(`${baseUrl}`, params);
 }
 
-
 //查询APP对应的域名
 function AppDomainList(app_id: string, params: any): Promise<any> {
     const baseUrl = `/proxys/${app_id}`;
     return api.get(`${baseUrl}`, params);
+}
+
+//根据ProxyID删除域名
+function AppDomainDeleteByProxyID(proxy_id: string, params: any): Promise<any> {
+    const baseUrl = `/proxys/${proxy_id}`;
+    return api.delete(`${baseUrl}`, params);
+}
+
+//根据ProxyID更新域名
+function AppDomainUpdateByProxyID(proxy_id: string, params: any, body: any): Promise<any> {
+    const baseUrl = `/proxys/${proxy_id}`;
+    return api.put(`${baseUrl}`, params, body);
+}
+
+//根据app_id创建域名
+function AppDomainCreateByAppID(app_id: string, params: any, body: any): Promise<any> {
+    const baseUrl = `/proxys/${app_id}`;
+    return api.post(`${baseUrl}`, params, body);
 }
 
 
@@ -84,8 +101,7 @@ function AppSearchUsers(params: any): Promise<any> {
 }
 
 export {
-    AppDomainAdd, AppDomainDelete, AppDomainList, AppDomainSet, AppDomainUpdate,
-    AppSearchUsers, Apps, RedeployApp, RemoveApp, RestartApp, StartApp, StopApp, UninstallApp
+    AppDomainAdd, AppDomainCreateByAppID, AppDomainDelete, AppDomainDeleteByProxyID, AppDomainList, AppDomainSet, AppDomainUpdate, AppDomainUpdateByProxyID, AppSearchUsers, Apps, RedeployApp, RemoveApp, RestartApp, StartApp, StopApp, UninstallApp
 };
 
 

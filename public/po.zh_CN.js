@@ -458,7 +458,26 @@
     "Re-pull image and redeploy:": [
         null,
         "重新提取镜像并重新部署："
+    ],
+    "Password copied successfully": [
+        null,
+        "密码复制成功"
+    ],
+    "Password copied failed": [
+        null,
+        "密码复制失败"
+    ],
+    "Successfully deleted": [
+        null,
+        "删除成功"
+    ],
+    "Saved successfully": [
+        null,
+        "保存成功"
+    ],
+    "Domain name cannot be empty": [
+        null,
+        "域名不能为空"
     ]
 }));
-
 

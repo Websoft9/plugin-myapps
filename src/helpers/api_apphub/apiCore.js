@@ -16,7 +16,8 @@ class APICore {
             return api_key
         }
         catch (error) {
-            return Promise.reject(error);
+            console.log(error);
+            return Promise.reject("Get The Apphub's Api Key Error");
         }
     }
 
