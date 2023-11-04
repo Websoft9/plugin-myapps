@@ -331,13 +331,9 @@
         null,
         "创建时间"
     ],
-    "Config Path": [
+    "App Config": [
         null,
-        "配置目录"
-    ],
-    "Data Path": [
-        null,
-        "数据目录"
+        "应用配置"
     ],
     "Domain Access": [
         null,
@@ -478,6 +474,22 @@
     "Domain name cannot be empty": [
         null,
         "域名不能为空"
+    ],
+    "View Config": [
+        null,
+        "查看配置"
+    ],
+    "Volumes": [
+        null,
+        "卷存"
+    ],
+    "Driver": [
+        null,
+        "驱动"
+    ],
+    "Mount point": [
+        null,
+        "挂载点"
     ]
 }));
 
