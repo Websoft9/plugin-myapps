@@ -1,3 +1,5 @@
+## 0.0.9 release on 2023-11-04
+1. nginx config update
 ## 0.0.9-rc1 release on 2023-11-04
 1. new apps init
 ## 0.0.8 release on 2023-10-31
