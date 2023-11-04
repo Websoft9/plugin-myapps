@@ -1,1 +1,1 @@
-1. new apps init
+1. nginx config update
