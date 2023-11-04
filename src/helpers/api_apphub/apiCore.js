@@ -36,7 +36,7 @@ class APICore {
             "address": this.address,
             "port": this.port,
             "headers": {
-                'api_key': await this.getApiKey()
+                'x-api-key': await this.getApiKey()
             }
         }).request(requestObject).then(function (response) {
             if (response) {
