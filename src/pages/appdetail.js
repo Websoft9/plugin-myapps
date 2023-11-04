@@ -12,6 +12,7 @@ import AppAccess from './appdetailtabs/appaccess';
 import AppContainer from './appdetailtabs/appcontainer';
 import AppOverview from './appdetailtabs/appoverview';
 import Uninstall from './appdetailtabs/appuninstall';
+import AppVolume from './appdetailtabs/appvolume';
 
 const _ = cockpit.gettext;
 const language = cockpit.language;//获取cockpit的当前语言环境
@@ -231,6 +232,12 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         },
         {
             id: '4',
+            title: _("Volumes"),
+            icon: 'mdi dripicons-stack',
+            text: <AppVolume data={currentApp} />,
+        },
+        {
+            id: '5',
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
             text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}

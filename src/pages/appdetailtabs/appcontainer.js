@@ -30,8 +30,8 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                 </a> */}
                                 <Button variant="primary" size="sm" className="float-end me-2" onClick={() => {
                                     let url = `container#/w9deployment/#!/${endpointId}/docker/stacks/${app_id}?type=2&regular=false&external=true&orphaned=false`;
-                                    cockpit.file('/etc/hostname').watch(content => {
-                                        console.log(content);
+                                    cockpit.file('/etc/hosts').watch(content => {
+
                                     });
                                     cockpit.jump(url);
                                 }}>{_("More")}</Button>
@@ -78,8 +78,7 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                         <a href="#" onClick={(e) => {
                                                             e.preventDefault();
                                                             let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/stats`;
-                                                            cockpit.file('/etc/hostname').watch(content => {
-                                                                console.log(content);
+                                                            cockpit.file('/etc/hosts').watch(content => {
                                                             });
                                                             cockpit.jump(url);
                                                         }} title='Stats'>
@@ -92,8 +91,7 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                         <a href="#" onClick={(e) => {
                                                             e.preventDefault();
                                                             let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/exec`;
-                                                            cockpit.file('/etc/hostname').watch(content => {
-                                                                console.log(content);
+                                                            cockpit.file('/etc/hosts').watch(content => {
                                                             });
                                                             cockpit.jump(url);
                                                         }} title='Exec Console'>

@@ -36,8 +36,19 @@ const AppOverview = (props): React$Element<React$FragmentType> => {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style={{ fontWeight: "bold" }}>{_("Config Path")}:</td>
-                                    <td>{props.data?.config_path}</td>
+                                    <td style={{ fontWeight: "bold" }}>{_("App Config")}:</td>
+                                    <td>
+                                        <a href="#" onClick={(e) => {
+                                            e.preventDefault();
+                                            let user_name = props.data?.gitConfig?.Authentication?.Username || "websoft9"
+                                            let url = `gitea#/w9git/${user_name}/${props.data?.app_id}`;
+                                            cockpit.file('/etc/hosts').watch(content => {
+                                                cockpit.jump(url);
+                                            });
+                                        }} title=''>
+                                            {_("View Config")}
+                                        </a>
+                                    </td>
                                 </tr>
                             </tbody>
                         </Table>
