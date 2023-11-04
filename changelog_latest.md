@@ -1,1 +1,1 @@
-1. Fix some known bugs
+1. new apps init
