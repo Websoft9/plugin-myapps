@@ -30,36 +30,30 @@ axios.interceptors.response.use(
         // }
     },
     (error) => {
-        console.log(error);
-        console.log(error.response);
         error.message = error.response?.data?.details || error.message || "Unknown Error";
-        // throw error;
         return Promise.reject(error);
     }
 );
 
 class APICore {
-    constructor() {
-        this.init();
-    }
 
-    init = async () => {
+    get = async (url, params) => {
         axios.defaults.headers.common['x-api-key'] = await getApiKey();
-    }
-
-    get = (url, params) => {
         return axios.get(url, { params });
     };
 
-    post = (url, params, data) => {
+    post = async (url, params, data) => {
+        axios.defaults.headers.common['x-api-key'] = await getApiKey();
         return axios.post(url, data, { params });
     };
 
-    put = (url, params, data) => {
+    put = async (url, params, data) => {
+        axios.defaults.headers.common['x-api-key'] = await getApiKey();
         return axios.put(url, data, { params });
     };
 
-    delete = (url, params) => {
+    delete = async (url, params) => {
+        axios.defaults.headers.common['x-api-key'] = await getApiKey();
         return axios.delete(url, { params });
     };
 }
