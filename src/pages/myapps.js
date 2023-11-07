@@ -193,7 +193,6 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const [loading, setLoading] = useState(false);
 
     const getApps = async () => {
-        setError(null);
         try {
             const newApps = await Apps();
             const sortedApps = newApps.sort((a, b) => {
@@ -210,10 +209,12 @@ const MyApps = (): React$Element<React$FragmentType> => {
                 );
                 setSelectedApp(updatedApp);
             }
+
             setLoading(false);
+            setError(null);
         }
         catch (error) {
-            setError(error.message || "Internal Server Error");
+            setError(error?.message || "Fetch Data Error");
         }
     }
 
@@ -250,7 +251,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
 
     if (loading) return <Spinner className='dis_mid' />;
-    if (error) return <p>Error : {error} </p>;
+    // if (error) return <p>Error : {error} </p>;
 
     //用于根据应用“状态”过滤应用
     const changeStatus = (selectedStatus) => {
@@ -312,150 +313,151 @@ const MyApps = (): React$Element<React$FragmentType> => {
     };
 
     return (
-        <>
-            <Row className="mb-2 align-items-center">
-                <Col xs={12} sm={6} md={3} lg={2}>
-                    <span style={{ fontSize: "28px" }}>{_("My Apps")}</span>
-                </Col>
-                <Col xs={12} sm={6} md={3} lg={2}>
-                    <FormInput
-                        value={selectedStatus}
-                        name="select"
-                        type="select"
-                        className="form-select"
-                        key="select"
-                        onChange={(e) => changeStatus(e.target.value)}
-                    >
-                        <option value="all">{_("All States")}</option>
-                        <option value="1">Active</option>
-                        <option value="2">Inactive</option>
-                    </FormInput>
-                </Col>
-                <Col xs={12} sm={12} md={6} lg={7}>
-                    <FormInput
-                        type="text"
-                        name="search"
-                        placeholder={_("Search for apps like WordPress, MySQL, GitLab, …")}
-                        onChange={(e) => handleInputChange(e.target.value)}
-                    />
-                </Col>
-                <Col xs={12} sm={12} md={12} lg={1}>
-                    <Button
-                        variant="primary"
-                        className="float-end"
-                        onClick={() => {
-                            window.location.reload(true);
-                        }}
-                    >
-                        {_("Refresh")}
-                    </Button>
-                </Col>
-            </Row>
+        error ? <p>Error : {error} </p> :
+            <>
+                <Row className="mb-2 align-items-center">
+                    <Col xs={12} sm={6} md={3} lg={2}>
+                        <span style={{ fontSize: "28px" }}>{_("My Apps")}</span>
+                    </Col>
+                    <Col xs={12} sm={6} md={3} lg={2}>
+                        <FormInput
+                            value={selectedStatus}
+                            name="select"
+                            type="select"
+                            className="form-select"
+                            key="select"
+                            onChange={(e) => changeStatus(e.target.value)}
+                        >
+                            <option value="all">{_("All States")}</option>
+                            <option value="1">Active</option>
+                            <option value="2">Inactive</option>
+                        </FormInput>
+                    </Col>
+                    <Col xs={12} sm={12} md={6} lg={7}>
+                        <FormInput
+                            type="text"
+                            name="search"
+                            placeholder={_("Search for apps like WordPress, MySQL, GitLab, …")}
+                            onChange={(e) => handleInputChange(e.target.value)}
+                        />
+                    </Col>
+                    <Col xs={12} sm={12} md={12} lg={1}>
+                        <Button
+                            variant="primary"
+                            className="float-end"
+                            onClick={() => {
+                                window.location.reload(true);
+                            }}
+                        >
+                            {_("Refresh")}
+                        </Button>
+                    </Col>
+                </Row>
 
-            {
-                [true, false].map((official_app) => {
-                    // 过滤出符合条件的apps
-                    const filteredApps = apps.filter((app) => selectedStatus === 'all' || app.status.toString() === selectedStatus)
-                        .filter((app) => app.app_official === official_app)
-                        .filter((app) => app.app_id.toLowerCase().includes(searchString.toLowerCase()));
-                    // 如果有数据，返回一个Row组件，否则返回null
-                    return filteredApps.length > 0 ? (
-                        <Row>
-                            {/* 根据official_app的值显示不同的标题 */}
-                            <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
-                            {filteredApps.map((app, i) => {
-                                return (
-                                    <Col xxl={2} md={3} key={app.app_id + i} className="appstore-item">
-                                        <div className='appstore-item-content highlight text-align-center' onClick={() => { official_app && handleClick(app) }}>
-                                            {
-                                                app.status === 2 ? (
-                                                    <>
-                                                        <div className="float-end arrow-none card-drop p-0" >
-                                                            <i className="dripicons-clockwise noti-icon" title={_('Redeploy')}
-                                                                style={{ marginRight: "10px" }}
-                                                                onClick={() => { redeployApp(app) }}>
-                                                            </i>
-                                                            <i className="dripicons-trash noti-icon" title={_('Remove')} onClick={() => { deleteApp(app) }}></i>
+                {
+                    [true, false].map((official_app) => {
+                        // 过滤出符合条件的apps
+                        const filteredApps = apps.filter((app) => selectedStatus === 'all' || app.status.toString() === selectedStatus)
+                            .filter((app) => app.app_official === official_app)
+                            .filter((app) => app.app_id.toLowerCase().includes(searchString.toLowerCase()));
+                        // 如果有数据，返回一个Row组件，否则返回null
+                        return filteredApps.length > 0 ? (
+                            <Row>
+                                {/* 根据official_app的值显示不同的标题 */}
+                                <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
+                                {filteredApps.map((app, i) => {
+                                    return (
+                                        <Col xxl={2} md={3} key={app.app_id + i} className="appstore-item">
+                                            <div className='appstore-item-content highlight text-align-center' onClick={() => { official_app && handleClick(app) }}>
+                                                {
+                                                    app.status === 2 ? (
+                                                        <>
+                                                            <div className="float-end arrow-none card-drop p-0" >
+                                                                <i className="dripicons-clockwise noti-icon" title={_('Redeploy')}
+                                                                    style={{ marginRight: "10px" }}
+                                                                    onClick={() => { redeployApp(app) }}>
+                                                                </i>
+                                                                <i className="dripicons-trash noti-icon" title={_('Remove')} onClick={() => { deleteApp(app) }}></i>
+                                                            </div>
+                                                            <div className="clearfix"></div>
+                                                        </>) : (
+                                                        <>
+                                                            <div className="float-end arrow-none card-drop p-0" >
+                                                                <i className="dripicons-trash noti-icon" style={{ visibility: "hidden" }}></i>
+                                                            </div>
+                                                            <div className="clearfix"></div>
+                                                        </>
+                                                    )
+                                                }
+                                                <div>
+                                                    <img
+                                                        src={`${baseURL}/media/logos/${app?.app_name}-websoft9.png`}
+                                                        alt={app?.app_name}
+                                                        className="app-icon"
+                                                        style={{ margin: "20px 10px 20px 10px" }}
+                                                        onError={(e) => (e.target.src = DefaultImg)}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <h3 className="appstore-item-content-title" style={{ color: "#2196f3" }}>
+                                                        {app.app_id}
+                                                    </h3>
+                                                    <div style={{ color: app.status === 2 ? 'red' : 'green', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <div className="m-2">
+                                                            {(!official_app) ? "" : (app.status === 1 ? "Active" : "Inactive")}
                                                         </div>
-                                                        <div className="clearfix"></div>
-                                                    </>) : (
-                                                    <>
-                                                        <div className="float-end arrow-none card-drop p-0" >
-                                                            <i className="dripicons-trash noti-icon" style={{ visibility: "hidden" }}></i>
-                                                        </div>
-                                                        <div className="clearfix"></div>
-                                                    </>
-                                                )
-                                            }
-                                            <div>
-                                                <img
-                                                    src={`${baseURL}/media/logos/${app?.app_name}-websoft9.png`}
-                                                    alt={app?.app_name}
-                                                    className="app-icon"
-                                                    style={{ margin: "20px 10px 20px 10px" }}
-                                                    onError={(e) => (e.target.src = DefaultImg)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <h3 className="appstore-item-content-title" style={{ color: "#2196f3" }}>
-                                                    {app.app_id}
-                                                </h3>
-                                                <div style={{ color: app.status === 2 ? 'red' : 'green', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    <div className="m-2">
-                                                        {(!official_app) ? "" : (app.status === 1 ? "Active" : "Inactive")}
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div >
-                                    </Col>
-                                )
-                            })}
-                        </Row >
-                    ) : null;
-                })
-            }
-            {
-                apps.length <= 0 && (
-                    <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px" }}>
-                        <h3>{_("No apps installed yet!")}</h3>
-                        <br></br>
-                        <h4>
-                            {_("How about installing some? Check out the ")}
-                            <a href="#" onClick={(e) => {
-                                e.preventDefault();
-                                let url = 'appstore';
-                                cockpit.file('/etc/hosts').watch(content => {
+                                            </div >
+                                        </Col>
+                                    )
+                                })}
+                            </Row >
+                        ) : null;
+                    })
+                }
+                {
+                    apps.length <= 0 && (
+                        <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px" }}>
+                            <h3>{_("No apps installed yet!")}</h3>
+                            <br></br>
+                            <h4>
+                                {_("How about installing some? Check out the ")}
+                                <a href="#" onClick={(e) => {
+                                    e.preventDefault();
+                                    let url = 'appstore';
+                                    cockpit.file('/etc/hosts').watch(content => {
 
-                                });
-                                cockpit.jump(url);
-                            }} >
-                                {_("App Store")}
-                            </a>
-                        </h4>
-                    </div>
-                )
-            }
-            {
-                showModal && selectedApp && selectedApp.status === 1 &&
-                <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
-            }
-            {
-                showRemoveConform &&
-                <RemoveAppConform showConform={showRemoveConform} onClose={canceldeleteApp} app={selectedApp} onDataChange={handleDataChange} />
-            }
-            {
-                showRedeployConform &&
-                <RedeployAppConform showConform={showRedeployConform} onClose={cancelredeployApp} app={selectedApp} onDataChange={handleDataChange} />
-            }
-            {
-                showAlert &&
-                <Snackbar open={showAlert} autoHideDuration={5000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-                    <MyMuiAlert onClose={handleAlertClose} severity={alertType} sx={{ width: '100%' }}>
-                        {alertMessage}
-                    </MyMuiAlert>
-                </Snackbar>
-            }
-        </>
+                                    });
+                                    cockpit.jump(url);
+                                }} >
+                                    {_("App Store")}
+                                </a>
+                            </h4>
+                        </div>
+                    )
+                }
+                {
+                    showModal && selectedApp && selectedApp.status === 1 &&
+                    <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
+                }
+                {
+                    showRemoveConform &&
+                    <RemoveAppConform showConform={showRemoveConform} onClose={canceldeleteApp} app={selectedApp} onDataChange={handleDataChange} />
+                }
+                {
+                    showRedeployConform &&
+                    <RedeployAppConform showConform={showRedeployConform} onClose={cancelredeployApp} app={selectedApp} onDataChange={handleDataChange} />
+                }
+                {
+                    showAlert &&
+                    <Snackbar open={showAlert} autoHideDuration={5000} onClose={handleAlertClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                        <MyMuiAlert onClose={handleAlertClose} severity={alertType} sx={{ width: '100%' }}>
+                            {alertMessage}
+                        </MyMuiAlert>
+                    </Snackbar>
+                }
+            </>
     );
 };
 

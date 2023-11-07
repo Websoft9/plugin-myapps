@@ -1,4 +1,5 @@
-import { APICore } from './apiCore';
+// import { APICore } from './apiCore';
+import { APICore } from "./apiCore_axios";
 
 const api = new APICore();
 

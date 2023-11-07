@@ -2,8 +2,8 @@ import cockpit from 'cockpit';
 
 class APICore {
     constructor() {
-        this.address = "websoft9-apphub";
-        this.port = 8080;
+        this.address = "localhost";
+        this.port = 80;
     }
 
     async getApiKey() {
@@ -16,12 +16,13 @@ class APICore {
             return api_key
         }
         catch (error) {
-            console.log(error);
             return Promise.reject("Get The Apphub's Api Key Error");
         }
     }
 
     async request(method, path, params = null, body = null) {
+        path = "/api" + path;
+
         let requestObject = {
             path: path,
             method: method,
@@ -36,6 +37,7 @@ class APICore {
             "address": this.address,
             "port": this.port,
             "headers": {
+                'Content-Type': 'application/json; charset=utf-8',
                 'x-api-key': await this.getApiKey()
             }
         }).request(requestObject).then(function (response) {
