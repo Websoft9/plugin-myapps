@@ -29,11 +29,10 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                     <Button variant="primary" size="sm" className="float-end">{_("More")}</Button>
                                 </a> */}
                                 <Button variant="primary" size="sm" className="float-end me-2" onClick={() => {
-                                    let url = `container#/w9deployment/#!/${endpointId}/docker/stacks/${app_id}?type=2&regular=false&external=true&orphaned=false`;
+                                    let url = `portainer#/w9deployment/#!/${endpointId}/docker/stacks/${app_id}?type=2&regular=false&external=true&orphaned=false`;
                                     cockpit.file('/etc/hosts').watch(content => {
-
+                                        cockpit.jump(url);
                                     });
-                                    cockpit.jump(url);
                                 }}>{_("More")}</Button>
                             </Col>
                         </Row>
@@ -64,11 +63,10 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                             <td style={{ textAlign: 'center' }}>
                                                 <a href="#" onClick={(e) => {
                                                     e.preventDefault();
-                                                    let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/logs`;
+                                                    let url = `portainer#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/logs`;
                                                     cockpit.file('/etc/hosts').watch(content => {
-
+                                                        cockpit.jump(url);
                                                     });
-                                                    cockpit.jump(url);
                                                 }}
                                                     title='Logs'>
                                                     <i className="dripicons-document-remove noti-icon"></i>{' '}
@@ -77,10 +75,11 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                     container.State === "running" && (
                                                         <a href="#" onClick={(e) => {
                                                             e.preventDefault();
-                                                            let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/stats`;
+                                                            let url = `portainer#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/stats`;
                                                             cockpit.file('/etc/hosts').watch(content => {
+                                                                cockpit.jump(url);
                                                             });
-                                                            cockpit.jump(url);
+
                                                         }} title='Stats'>
                                                             <i className="dripicons-graph-bar noti-icon"></i>{' '}
                                                         </a>
@@ -90,10 +89,10 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                     container.State === "running" && (
                                                         <a href="#" onClick={(e) => {
                                                             e.preventDefault();
-                                                            let url = `container#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/exec`;
+                                                            let url = `portainer#/w9deployment/#!/${endpointId}/docker/containers/${container.Id}/exec`;
                                                             cockpit.file('/etc/hosts').watch(content => {
+                                                                cockpit.jump(url);
                                                             });
-                                                            cockpit.jump(url);
                                                         }} title='Exec Console'>
                                                             <i className="dripicons-code noti-icon"></i>{' '}
                                                         </a>
