@@ -383,11 +383,11 @@
         null,
         "没有域名可以通过IP+端口的方式临时访问应用"
     ],
-    "Front End": [
+    "Frontend": [
         null,
         "前台"
     ],
-    "Back End": [
+    "Backend": [
         null,
         "后台"
     ],

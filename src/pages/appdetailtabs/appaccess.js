@@ -152,9 +152,8 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                         e.preventDefault();
                                         let url = `nginx#/w9proxy/nginx/proxy`;
                                         cockpit.file('/etc/hosts').watch(content => {
-
+                                            cockpit.jump(url);
                                         });
-                                        cockpit.jump(url);
                                     }} >
                                         {_("more")}
                                     </a>
@@ -215,7 +214,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                         </AccordionDetails>
                     </Accordion>
                     {
-                        domains.length === 0 && env &&
+                        domains.length === 0 && env && app_port &&
                         <Accordion defaultExpanded={true} onChange={handleChangefornodomin} className='mb-2'>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
@@ -234,7 +233,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                     <Card>
                                         <Card.Body>
                                             <div>
-                                                <label className="me-2 fs-5">{_("Front End")}:</label>
+                                                <label className="me-2 fs-5">{_("Frontend")}:</label>
                                                 <a href={`${baseURL}:${app_port}`} target="_blank" className="me-2">
                                                     {`${baseURL}:${app_port}`}
                                                 </a>
@@ -242,7 +241,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                             {
                                                 env.APP_ADMIN_PATH && (
                                                     <div>
-                                                        <label className="me-2 fs-5">{_("Back End")}:</label>
+                                                        <label className="me-2 fs-5">{_("Backend")}:</label>
                                                         <a href={`${baseURL}:${app_port}${env?.APP_ADMIN_PATH}`} target="_blank" className="me-2">
                                                             {`${baseURL}:${app_port}${env?.APP_ADMIN_PATH}`}
                                                         </a>

@@ -51,7 +51,7 @@ const UninstallConform = (props) => {
                 <Modal.Body className="row" >
                     <span style={{ margin: "10px 0px" }}>{_("This will immediately uninstall the app, If the data is preserved, the app can be redeploy.")}</span>
                     <div style={{ display: "flex", alignItems: "center" }}>
-                        {_("Do you want to purge the data:")}
+                        <span style={{ fontWeight: "bold", marginRight: "10px" }}>{_("Do you want to purge the data:")}</span>
                         <Form>
                             <Form.Check
                                 type="switch"

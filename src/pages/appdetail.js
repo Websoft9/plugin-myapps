@@ -55,7 +55,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                 <Modal.Body className="row" >
                     <span style={{ margin: "10px 0px" }}>{_("This will be applied through local warehouse reconstruction. If the warehouse does not exist or there are errors in the warehouse file, the reconstruction will fail.")}</span>
                     <div style={{ display: "flex", alignItems: "center" }}>
-                        {_("Re-pull image and redeploy:")}
+                        <span style={{ fontWeight: "bold", marginRight: "10px" }}>{_("Re-pull image and redeploy:")}</span>
                         < Form >
                             <Form.Check
                                 type="switch"
