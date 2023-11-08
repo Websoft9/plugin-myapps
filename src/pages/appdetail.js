@@ -222,13 +222,13 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             id: '2',
             title: _("Access"),
             icon: 'mdi dripicons-web',
-            text: <AppAccess data={currentApp} />,
+            text: <AppAccess data={currentApp} onDataChange={props.onDataChange} />,
         },
         {
             id: '3',
             title: _("Container"),
             icon: 'mdi dripicons-stack',
-            text: <AppContainer data={currentApp} />,
+            text: <AppContainer data={currentApp} onDataChange={props.onDataChange} />,
         },
         {
             id: '4',

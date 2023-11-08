@@ -186,7 +186,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                             <Row className="mb-2" key={index}>
                                                 <Col xs={12} className="d-flex justify-content-between">
                                                     <Col>
-                                                        <TagsInput initialTags={row?.domain_names} proxy_id={row?.id} />
+                                                        <TagsInput initialTags={row?.domain_names} proxy_id={row?.id} onDataChange={props.onDataChange} />
                                                     </Col>
                                                 </Col>
                                             </Row>
@@ -202,7 +202,9 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                             defaultEditable
                                                             ref={tagsInputRef}
                                                             onSaveRow={() => handleSaveRow(index)}
-                                                            onDeleteRow={() => deletDomaineRow(index)} />
+                                                            onDeleteRow={() => deletDomaineRow(index)}
+                                                            onDataChange={props.onDataChange}
+                                                        />
                                                     </Col>
                                                 </Col>
                                             </Row>

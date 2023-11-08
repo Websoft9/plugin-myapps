@@ -70,7 +70,7 @@ const DeleteDomainConform = (props) => {
                         setShowCloseButton(false);
                         try {
                             await AppDomainDeleteByProxyID(props.proxy_id);
-
+                            props.onDataChange();
                             props.onClose();
                         }
                         catch (error) {
@@ -103,7 +103,16 @@ const DeleteDomainConform = (props) => {
     );
 }
 
-const TagsInput = forwardRef(({ app_id, proxy_id, initialTags = [], initialOptions = [], newlyAdded = false, defaultEditable = false, onDeleteRow, onSaveRow }, ref): React$Element<React$FragmentType> => {
+const TagsInput = forwardRef(({
+    app_id, proxy_id,
+    initialTags = [],
+    initialOptions = [],
+    newlyAdded = false,
+    defaultEditable = false,
+    onDeleteRow,
+    onSaveRow,
+    onDataChange
+}, ref): React$Element<React$FragmentType> => {
     const [tags, setTags] = useState(initialTags);
     const [tempTags, setTempTags] = useState(initialTags);
     const [inputValue, setInputValue] = useState('');
@@ -169,6 +178,8 @@ const TagsInput = forwardRef(({ app_id, proxy_id, initialTags = [], initialOptio
 
                 setIsEditable(false);
                 setTags(tempTags);
+
+                onDataChange();
             }
             catch (error) {
                 setAlertType("error");
@@ -195,6 +206,7 @@ const TagsInput = forwardRef(({ app_id, proxy_id, initialTags = [], initialOptio
                 if (onDeleteRow) {
                     onDeleteRow();
                 }
+                onDataChange();
             }
             catch (error) {
                 setAlertType("error");
@@ -362,7 +374,7 @@ const TagsInput = forwardRef(({ app_id, proxy_id, initialTags = [], initialOptio
             </Grid>
             {
                 showRemoveDomain &&
-                <DeleteDomainConform proxy_id={proxy_id} domains={tags} showConform={handleDeleteClick} onClose={handleCloseClick} />
+                <DeleteDomainConform proxy_id={proxy_id} domains={tags} showConform={handleDeleteClick} onClose={handleCloseClick} onDataChange={onDataChange} />
             }
             {
                 showAlert &&
