@@ -8,14 +8,20 @@ axios.defaults.baseURL = `${window.location.protocol}//${window.location.hostnam
 const getApiKey = async () => {
     try {
         var script = "docker exec -i websoft9-apphub apphub getconfig --section api_key --key key";
-        const api_key = (await cockpit.spawn(["/bin/bash", "-c", script])).trim();
-        if (!api_key) {
-            return Promise.reject(new Error("Api Key Not Set"))
-        }
+        const api_key = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
         return api_key
     }
     catch (error) {
-        return Promise.reject("Get The Apphub's Api Key Error");
+        const errorText = [error.problem, error.reason, error.message]
+            .filter(item => typeof item === 'string')
+            .join(' ');
+
+        if (errorText.includes("permission denied")) {
+            throw new Error("Permission denied");
+        }
+        else {
+            throw new Error(errorText || "Get The Apphub's Api Key Error");
+        }
     }
 }
 
