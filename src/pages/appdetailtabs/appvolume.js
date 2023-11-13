@@ -19,7 +19,7 @@ const AppVolume = (props): React$Element<React$FragmentType> => {
                             </Col>
                             <Col xs={12} md={2}>
                                 <Button variant="primary" size="sm" className="float-end me-2" onClick={() => {
-                                    let url = `container#/w9deployment/#!/${endpointId}/docker/volumes`;
+                                    let url = `portainer#/w9deployment/#!/${endpointId}/docker/volumes`;
                                     cockpit.file('/etc/hosts').watch(content => {
                                         cockpit.jump(url);
                                     });
@@ -45,7 +45,7 @@ const AppVolume = (props): React$Element<React$FragmentType> => {
                                             <td>
                                                 <a href="#" onClick={(e) => {
                                                     e.preventDefault();
-                                                    let url = `container#/w9deployment/#!/${endpointId}/docker/volumes/${volume?.Name}`;
+                                                    let url = `portainer#/w9deployment/#!/${endpointId}/docker/volumes/${volume?.Name}`;
                                                     cockpit.file('/etc/hosts').watch(content => {
                                                         cockpit.jump(url);
                                                     });
