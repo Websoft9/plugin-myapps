@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: false
-
+      appname: myapps
     steps:
       - uses: actions/checkout@v2
 
@@ -27,31 +27,32 @@ jobs:
       - name: Build
         run: yarn build
 
+      - name: Version convert
+        id: convert_version      
+        run: |
+          version=$(jq -r '.Version' "${{ env.appname }}.json")
+          version_core=${version%%-*}
+          echo "VERSION=$version" >> $GITHUB_OUTPUT
+          echo "VERSION_CORE=$version_core" >> $GITHUB_OUTPUT
+          if [[ $version == *-* ]]; then
+            echo "rc release version"
+            echo "CHANNEL=dev" >> $GITHUB_OUTPUT
+          else
+            echo "release version"
+            echo "CHANNEL=release" >> $GITHUB_OUTPUT
+          fi
+
       - name: Update CHANGELOG.md and public/manifest.json
         id: update_data
-        run: |
-          version=$(jq -r '.Version' myapps.json)
-          echo "PLUGIN_VERSION=$version" >> $GITHUB_OUTPUT
-          real_version=${version%%-*}
-          echo "VERSION=$real_version" >> $GITHUB_ENV
-          echo "RC_VERSION=$version" >> $GITHUB_ENV
-          if [[ $version == *-* ]]; then
-            echo "release version"
-            echo "::set-output name=release::false"
-          else
-            echo "rc release version"
-            echo "::set-output name=release::true"
-          fi                    
+        run: |                 
           changelog=$(cat changelog_latest.md)
           echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT 
           echo "$changelog" >> $GITHUB_OUTPUT 
           echo "EOF" >> $GITHUB_OUTPUT
-          
           current_date=$(date +%Y-%m-%d)
-          printf "## $version release on $current_date\n$changelog\n$(cat CHANGELOG.md)" > temp.txt
+          printf "## ${{ steps.convert_version.outputs.VERSION }} release on $current_date\n$changelog\n$(cat CHANGELOG.md)" > temp.txt
           mv temp.txt CHANGELOG.md
-      
-          jq -r --arg version "$version" '.version = $version' public/manifest.json > manifest.json.tmp
+          jq -r --arg version "${{ steps.convert_version.outputs.VERSION }}" '.version = $version' public/manifest.json > manifest.json.tmp
           mv manifest.json.tmp public/manifest.json
           
       - name: Commit and push changes
@@ -62,58 +63,34 @@ jobs:
       - name: Create Zip Archive
         run: |
           mkdir artifacts
-          mv build myapps
-          cp CHANGELOG.md myapps
-          cp myapps.json myapps
-          cp -r docs myapps
-          rsync -av --exclude='changelog_latest.md' *.md myapps/
-          zip -r myapps-${{ env.VERSION }}.zip myapps/
+          mv build ${{ env.appname }}
+          cp CHANGELOG.md ${{ env.appname }}
+          cp ${{ env.appname }}.json ${{ env.appname }}
+          cp -r docs ${{ env.appname }}
+          rsync -av --exclude='changelog_latest.md' *.md ${{ env.appname }}/
+          zip -r ${{ env.appname }}-${{ steps.convert_version.outputs.VERSION_CORE }}.zip ${{ env.appname }}/
           cp CHANGELOG.md artifacts/
-          cp myapps.json artifacts/
-          mv myapps-${{ env.VERSION }}.zip artifacts/
-          cp artifacts/myapps-${{ env.VERSION }}.zip artifacts/myapps-latest.zip
+          cp ${{ env.appname }}.json artifacts/
+          mv ${{ env.appname }}-${{ steps.convert_version.outputs.VERSION_CORE }}.zip artifacts/
+          cp artifacts/${{ env.appname }}-${{ steps.convert_version.outputs.VERSION_CORE }}.zip artifacts/${{ env.appname }}-latest.zip
 
       - name: Upload To Azure Blob
         uses: LanceMcCarthy/Action-AzureBlobUpload@v2
-        if: ${{ steps.update_data.outputs.release == 'false' }}
         with:
           connection_string: ${{ secrets.AZURE_STORAGE_ARTIFACT }}
-          container_name: dev
+          container_name: ${{ steps.convert_version.outputs.CHANNEL }}
           source_folder: artifacts/
-          destination_folder: ./websoft9/plugin/myapps
+          destination_folder: ./websoft9/plugin/${{ env.appname }}
           delete_if_exists: true
           fail_if_source_empty: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: ${{ steps.update_data.outputs.release == 'false' }}
         with:
-          files: /*
-          tag_name: ${{ env.RC_VERSION }}
-          title: Release-${{ env.RC_VERSION }}
-          body: ${{ steps.update_data.outputs.CHANGELOG }}
-          draft: false
-          prerelease: false
-
-      - name: Upload To Azure Blob
-        uses: LanceMcCarthy/Action-AzureBlobUpload@v2
-        if: ${{ steps.update_data.outputs.release == 'true' }}
-        with:
-          connection_string: ${{ secrets.AZURE_STORAGE_ARTIFACT }}
-          container_name: release
-          source_folder: artifacts/
-          destination_folder: ./websoft9/plugin/myapps
-          delete_if_exists: true
-          fail_if_source_empty: true
-
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        if: ${{ steps.update_data.outputs.release == 'true' }}
-        with:
-          files: /*
-          tag_name: ${{ env.VERSION }}
-          title: Release-${{ env.VERSION }}
+          files: |
+            ${{ env.appname }}.json
+          tag_name: ${{ steps.convert_version.outputs.VERSION }}
+          title: Release-${{ steps.convert_version.outputs.VERSION }}
           body: ${{ steps.update_data.outputs.CHANGELOG }}
           draft: false
           prerelease: false
