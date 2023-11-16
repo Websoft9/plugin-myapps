@@ -1,3 +1,5 @@
+## 0.1.0 release on 2023-11-16
+1. nginx config update
 ## 0.1.0-rc1 release on 2023-11-15
 1. nginx config update
 ## 0.0.9 release on 2023-11-13
