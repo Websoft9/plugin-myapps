@@ -7,7 +7,7 @@
 
 This plugin is used to manage the installed applications. You can use CRUD for installed applications.
 
-![image](https://github.com/Websoft9/plugin-myapps/assets/43192516/ebfb88a1-7c48-48db-8045-43f04a2d4518)
+![image](https://github.com/Websoft9/plugin-myapps/assets/43192516/f90aa375-26f8-4e17-9d8c-87040ef08e50)
 
 
 ## Installation and update
