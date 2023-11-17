@@ -5,7 +5,7 @@
 
 # Websoft9 Plugin - `myapps`
 
-This plugin is used to manage the installed applications. You can use CRUD for installed applications.
+This plugin is used to manage the installed applications. You can start, stop, rebuild, delete, and other operations on installed applications, as well as view detailed information of the application and bind the domain name
 
 ![image](https://github.com/Websoft9/plugin-myapps/assets/43192516/f90aa375-26f8-4e17-9d8c-87040ef08e50)
 
