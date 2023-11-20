@@ -10,8 +10,13 @@
 
 **Backend API**  
 
-- apphub: this is for manage installed applications 
+- apphub: this is for manage installed applications
 - cockpit: this is for running command at host machine
+
+related classes:
+
+- src/helpers/api_apphub/apiCore_axios.js (connect cockpit)
+- src/helpers/api_apphub/appHub.js
 
 ## Build and Test
 
