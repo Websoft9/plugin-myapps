@@ -25,5 +25,9 @@ You should install [Websoft9](https://github.com/Websoft9/websoft9) for testing,
 ```
 git clone https://github.com/Websoft9/plugin-myapps
 cd plugin-myapps
+# test
+yarn start
+yarn test
+# build
 yarn build && cp -r ./build/* /usr/share/cockpit/myapps/
 ```
