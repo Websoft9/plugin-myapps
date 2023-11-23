@@ -9,6 +9,7 @@ import DefaultImg from '../assets/images/default.png';
 import Spinner from '../components/Spinner';
 import { RedeployApp, RestartApp, StartApp, StopApp } from '../helpers';
 import AppAccess from './appdetailtabs/appaccess';
+import AppCompose from './appdetailtabs/appcompose';
 import AppContainer from './appdetailtabs/appcontainer';
 import AppOverview from './appdetailtabs/appoverview';
 import Uninstall from './appdetailtabs/appuninstall';
@@ -207,10 +208,6 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         }
     }, [props.current_app]);
 
-    // useEffect(() => {
-
-    // }, []);
-
     const tabContents = [
         {
             id: '1',
@@ -238,6 +235,12 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         },
         {
             id: '5',
+            title: _("Compose"),
+            icon: 'mdi dripicons-stack',
+            text: <AppCompose data={currentApp} />,
+        },
+        {
+            id: '6',
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
             text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}

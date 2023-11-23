@@ -42,7 +42,6 @@ axios.interceptors.response.use(
 );
 
 class APICore {
-
     get = async (url, params) => {
         axios.defaults.headers.common['x-api-key'] = await getApiKey();
         return axios.get(url, { params });

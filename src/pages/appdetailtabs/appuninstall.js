@@ -25,12 +25,12 @@ const UninstallConform = (props) => {
 
     function closeAllModals() {
         //更新主页APP的数据
-        props.onDataChange();
+        //props.onDataChange();
 
         //关闭弹窗
-        props.onClose();
-        props.onCloseFatherModal();
-        //window.location.reload(true);
+        // props.onClose();
+        // props.onCloseFatherModal();
+        window.location.reload(true);
     }
 
     const handleClose = (event, reason) => {

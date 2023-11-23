@@ -15,6 +15,13 @@ function RemoveApp(app_id: string, params: any): Promise<any> {
     return api.delete(`${baseUrl}`, params);
 }
 
+//移除安装错误的App
+function RemoveErrorApp(app_id: string, params: any): Promise<any> {
+    const baseUrl = `/apps/${app_id}/error/remove`;
+    return api.delete(`${baseUrl}`, params);
+}
+
+
 //重建App(状态为：Inactive)
 function RedeployApp(app_id: string, params: any): Promise<any> {
     const baseUrl = `/apps/${app_id}/redeploy`;
@@ -70,39 +77,18 @@ function AppDomainCreateByAppID(app_id: string, params: any, body: any): Promise
 }
 
 
-
-//删除APP绑定的域名
-function AppDomainDelete(params: any): Promise<any> {
-    const baseUrl = '/AppDomainDelete';
-    return api.get(`${baseUrl}`, params);
-}
-
-//修改APP绑定的域名
-function AppDomainUpdate(params: any): Promise<any> {
-    const baseUrl = '/AppDomainUpdate';
-    return api.get(`${baseUrl}`, params);
-}
-
-//APP绑定域名
-function AppDomainAdd(params: any): Promise<any> {
-    const baseUrl = '/AppDomainAdd';
-    return api.get(`${baseUrl}`, params);
-}
-
-//设定默认域名
-function AppDomainSet(params: any): Promise<any> {
-    const baseUrl = '/AppDomainSet';
-    return api.get(`${baseUrl}`, params);
-}
-
-//获取插件登录数据
-function AppSearchUsers(params: any): Promise<any> {
-    const baseUrl = '/AppSearchUsers';
-    return api.get(`${baseUrl}`, params);
-}
-
 export {
-    AppDomainAdd, AppDomainCreateByAppID, AppDomainDelete, AppDomainDeleteByProxyID, AppDomainList, AppDomainSet, AppDomainUpdate, AppDomainUpdateByProxyID, AppSearchUsers, Apps, RedeployApp, RemoveApp, RestartApp, StartApp, StopApp, UninstallApp
+    AppDomainCreateByAppID,
+    AppDomainDeleteByProxyID,
+    AppDomainList,
+    AppDomainUpdateByProxyID,
+    Apps,
+    RedeployApp,
+    RemoveApp,
+    RemoveErrorApp,
+    RestartApp,
+    StartApp,
+    StopApp,
+    UninstallApp
 };
-
 

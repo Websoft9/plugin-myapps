@@ -3,23 +3,49 @@ import Snackbar from '@mui/material/Snackbar';
 import classNames from 'classnames';
 import cockpit from 'cockpit';
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Col, Modal, Row } from 'react-bootstrap';
+import { Badge, Button, Col, Modal, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import DefaultImg from '../assets/images/default.png';
 import FormInput from '../components/FormInput';
 import Spinner from '../components/Spinner';
-import { Apps, RedeployApp, RemoveApp } from '../helpers';
+import { Apps, RedeployApp, RemoveApp, RemoveErrorApp } from '../helpers';
 import AppDetailModal from './appdetail';
 
 const _ = cockpit.gettext;
 let protocol = window.location.protocol;
 let host = window.location.host;
-const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
+const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
 const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
+//应用状态为error时，显示错误消息
+const ErrorInfoModal = (props): React$Element<React$FragmentType> => {
+    return (
+        <Modal show={props.showConform} onHide={props.onClose} size="lg" scrollable="true" backdrop="static">
+            <Modal.Header onHide={props.onClose} closeButton className={classNames('modal-colored-header', 'bg-danger')}>
+                <h4>{_("This is the error message for")} {props.app.app_id}</h4>
+            </Modal.Header>
+            <Modal.Body className="row" >
+                {
+                    props.app.error &&
+                    <>
+                        <span style={{ margin: "10px 0px" }}> <b>{_("Detail: ")}</b>{props.app.error} </span>
+                    </>
+                }
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="light" onClick={props.onClose}>
+                    {_("Close")}
+                </Button>
+                <Button variant="light" onClick={() => window.open('https://www.websoft9.com/ticket', '_blank')}>
+                    {_("Support")}
+                </Button>
+            </Modal.Footer>
+        </Modal >
+    );
+}
 
 //重建应用弹窗
 const RedeployAppConform = (props): React$Element<React$FragmentType> => {
@@ -30,9 +56,6 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
     const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
 
     function closeAllModals() {
-        //关闭所有弹窗
-        // props.onClose();
-        // props.onDataChange();
         window.location.reload(true);
     }
 
@@ -49,7 +72,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
             <Modal show={props.showConform} onHide={props.onClose} size="lg"
                 scrollable="true" backdrop="static">
                 <Modal.Header onHide={props.onClose} className={classNames('modal-colored-header', 'bg-warning')}>
-                    <h4>{_("Redeploy")} {props.app.app_id}</h4>
+                    <h4>{_("Redeploy")} {props?.app.app_id}</h4>
                 </Modal.Header>
                 <Modal.Body className="row" >
                     <span style={{ margin: "10px 0px" }}>{_("This will be applied through local warehouse reconstruction. If the warehouse does not exist or there are errors in the warehouse file, the reconstruction will fail.")}</span>
@@ -99,16 +122,13 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
 
 //删除应用弹窗
 const RemoveAppConform = (props): React$Element<React$FragmentType> => {
-    const navigate = useNavigate(); //用于页面跳转
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
+    const [currentApp, setCurrentApp] = useState(props.app);
 
     function closeAllModals() {
-        //关闭所有弹窗
-        // props.onClose();
-        // props.onDataChange();
         window.location.reload(true);
     }
 
@@ -120,12 +140,16 @@ const RemoveAppConform = (props): React$Element<React$FragmentType> => {
         setAlertMessage("");
     };
 
+    useEffect(() => {
+        setCurrentApp(props.app);
+    }, [props.app]);
+
     return (
         <>
             <Modal show={props.showConform} onHide={props.onClose} size="lg"
                 scrollable="true" backdrop="static">
                 <Modal.Header onHide={props.onClose} className={classNames('modal-colored-header', 'bg-warning')}>
-                    <h4>{_("Remove")} {props.app.app_id}</h4>
+                    <h4>{_("Remove")} {currentApp?.app_id}</h4>
                 </Modal.Header>
                 <Modal.Body className="row" >
                     <span style={{ margin: "10px 0px" }}>{_("This will immediately remove the app and remove all its data.")}</span>
@@ -143,7 +167,13 @@ const RemoveAppConform = (props): React$Element<React$FragmentType> => {
                         setDisable(true);
                         setShowCloseButton(false);
                         try {
-                            await RemoveApp(props.app.app_id);
+                            if (props.deleteType === "error") {
+                                await RemoveErrorApp(currentApp.app_id);
+                            }
+                            else if (props.deleteType === "inactive") {
+                                await RemoveApp(currentApp.app_id);
+                            }
+
                             closeAllModals(); //关闭弹窗并更新数据
                         }
                         catch (error) {
@@ -185,6 +215,8 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const [searchString, setSearchString] = useState("");//用户输入的筛选字符串
     const [selectedStatus, setSelectedStatus] = useState("all"); //用于存储用户筛选应用状态的标识
     const [progressId, setProgressId] = useState([]); //用于存储当前正在安装的应用ID，用于做进度查询的参数
+    const [deleteType, setDeleteType] = useState("");//用于存储删除应用的类型：error\inactive
+    const [showErrorInfo, setShowErrorInfo] = useState(false); //用于显示状态为failed时显示错误消息的弹窗
 
     const selectedAppRef = useRef(selectedApp);
     const navigate = useNavigate(); //用于页面跳转
@@ -272,9 +304,10 @@ const MyApps = (): React$Element<React$FragmentType> => {
     };
 
     //用于应用为inactive时删除应用
-    const deleteApp = (app) => {
+    const deleteApp = (app, type) => {
         setSelectedApp(app);
         setShowRemoveConform(true);
+        setDeleteType(type);
     };
 
     //用于应用为inactive时重建应用
@@ -299,6 +332,17 @@ const MyApps = (): React$Element<React$FragmentType> => {
         setSelectedApp(null);
     };
 
+    //用于应用为failed时显示错误信息弹窗
+    const showError = (app) => {
+        setSelectedApp(app);
+        setShowErrorInfo(true);
+    };
+
+    //用于关闭显示错误消息弹窗
+    const cancelShowError = () => {
+        setShowErrorInfo(false);
+    };
+
     const handleAlertClose = (event, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -310,6 +354,43 @@ const MyApps = (): React$Element<React$FragmentType> => {
     //用于立即刷新数据
     const handleDataChange = () => {
         getApps();
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 1: // Active
+                return 'green';
+            case 2: // Inactive
+                return 'yellow';
+            case 3: // Installing
+                return 'blue';
+            case 4: // Error
+                return 'red';
+            default: // Unknown
+                return 'black';
+        }
+    }
+
+    const getStatusBadgeClass = (status) => {
+        switch (status) {
+            case 1: // Active
+                return 'bg-success';
+            case 2: // Inactive
+                return 'bg-warning';
+            case 3: // Installing
+                return 'bg-info';
+            case 4: // Error
+                return 'bg-danger';
+            default: // Unknown
+                return 'bg-dark';
+        }
+    }
+
+    const statusMapping = {
+        '1': 'Active',
+        '2': 'Inactive',
+        '3': 'Installing',
+        '4': 'Error'
     };
 
     return (
@@ -331,6 +412,8 @@ const MyApps = (): React$Element<React$FragmentType> => {
                             <option value="all">{_("All States")}</option>
                             <option value="1">Active</option>
                             <option value="2">Inactive</option>
+                            <option value="3">Installing</option>
+                            <option value="4">Error</option>
                         </FormInput>
                     </Col>
                     <Col xs={12} sm={12} md={6} lg={7}>
@@ -356,98 +439,167 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
                 {
                     [true, false].map((official_app) => {
-                        // 过滤出符合条件的apps
-                        const filteredApps = apps.filter((app) => selectedStatus === 'all' || app.status.toString() === selectedStatus)
-                            .filter((app) => app.app_official === official_app)
-                            .filter((app) => app.app_id.toLowerCase().includes(searchString.toLowerCase()));
-                        // 如果有数据，返回一个Row组件，否则返回null
-                        return filteredApps.length > 0 ? (
-                            <Row>
-                                {/* 根据official_app的值显示不同的标题 */}
-                                <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
-                                {filteredApps.map((app, i) => {
-                                    return (
-                                        <Col xxl={2} md={3} key={app.app_id + i} className="appstore-item">
-                                            <div className='appstore-item-content highlight text-align-center' onClick={() => { official_app && handleClick(app) }}>
-                                                {
-                                                    app.status === 2 ? (
-                                                        <>
-                                                            <div className="float-end arrow-none card-drop p-0" >
-                                                                <i className="dripicons-clockwise noti-icon" title={_('Redeploy')}
-                                                                    style={{ marginRight: "10px" }}
-                                                                    onClick={() => { redeployApp(app) }}>
-                                                                </i>
-                                                                <i className="dripicons-trash noti-icon" title={_('Remove')} onClick={() => { deleteApp(app) }}></i>
-                                                            </div>
-                                                            <div className="clearfix"></div>
-                                                        </>) : (
-                                                        <>
-                                                            <div className="float-end arrow-none card-drop p-0" >
-                                                                <i className="dripicons-trash noti-icon" style={{ visibility: "hidden" }}></i>
-                                                            </div>
-                                                            <div className="clearfix"></div>
-                                                        </>
-                                                    )
-                                                }
-                                                <div>
-                                                    <img
-                                                        src={`${baseURL}/media/logos/${app?.app_name}-websoft9.png`}
-                                                        alt={app?.app_name}
-                                                        className="app-icon"
-                                                        style={{ margin: "20px 10px 20px 10px" }}
-                                                        onError={(e) => (e.target.src = DefaultImg)}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <h3 className="appstore-item-content-title" style={{ color: "#2196f3" }}>
-                                                        {app.app_id}
-                                                    </h3>
-                                                    <div style={{ color: app.status === 2 ? 'red' : 'green', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                        <div className="m-2">
-                                                            {(!official_app) ? "" : (app.status === 1 ? "Active" : "Inactive")}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div >
-                                        </Col>
-                                    )
-                                })}
-                            </Row >
-                        ) : null;
-                    })
-                }
-                {
-                    apps.length <= 0 && (
-                        <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px" }}>
-                            <h3>{_("No apps installed yet!")}</h3>
-                            <br></br>
-                            <h4>
-                                {_("How about installing some? Check out the ")}
-                                <a href="#" onClick={(e) => {
-                                    e.preventDefault();
-                                    let url = 'appstore';
-                                    cockpit.file('/etc/hosts').watch(content => {
+                        // 预过滤出符合条件的apps
+                        const preFilteredApps = apps.filter((app) =>
+                            official_app ?
+                                (selectedStatus === 'all' || app.status.toString() === selectedStatus) &&
+                                app.app_official === official_app && app.app_id.toLowerCase().includes(searchString.toLowerCase()) :
+                                app.app_official === official_app
+                        );
 
-                                    });
-                                    cockpit.jump(url);
-                                }} >
-                                    {_("App Store")}
-                                </a>
-                            </h4>
-                        </div>
-                    )
+                        // 检查是否有官方应用和非官方应用被安装
+                        const hasOfficialApps = apps.some(app => app.app_official);
+                        const hasNonOfficialApps = apps.some(app => !app.app_official);
+
+
+                        // 如果预过滤结果为空，则显示提示，否则进行进一步过滤并显示结果
+                        if (preFilteredApps.length === 0 && official_app) {
+                            if (hasOfficialApps) {
+                                return (
+                                    <Row>
+                                        <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
+                                        <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px", marginBottom: "50px" }}>
+                                            <h4>{_("No Apps Found")}</h4>
+                                        </div>
+                                    </Row>
+                                );
+                            }
+                            else {
+                                return (
+                                    <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px" }}>
+                                        <h3>{_("No apps installed yet!")}</h3>
+                                        <br></br>
+                                        <h4>
+                                            {_("How about installing some? Check out the ")}
+                                            <a href="#" onClick={(e) => {
+                                                e.preventDefault();
+                                                let url = 'appstore';
+                                                cockpit.file('/etc/hosts').watch(content => {
+                                                    cockpit.jump(url);
+                                                });
+                                            }} >
+                                                {_("App Store")}
+                                            </a>
+                                        </h4>
+                                    </div>
+                                )
+                            }
+
+                        }
+                        else if (!official_app && !hasNonOfficialApps) {
+                            // 如果没有非官方应用，不渲染 "Other Apps" 的标题
+                            return null;
+                        }
+                        else {
+                            // 进一步过滤出符合条件的apps
+                            const filteredApps = official_app ? preFilteredApps.filter((app) => app.app_id.toLowerCase().includes(searchString.toLowerCase())) : preFilteredApps;
+
+                            return (
+                                <Row>
+                                    {/* 根据official_app的值显示不同的标题 */}
+                                    <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
+                                    {filteredApps.map((app, i) => {
+                                        return (
+                                            <Col xxl={2} md={3} key={app.app_id} className="appstore-item">
+                                                <div className='appstore-item-content highlight text-align-center' onClick={() => { official_app && handleClick(app) }}>
+                                                    {
+                                                        app.status === 2 ? // Inactive
+                                                            (
+                                                                <>
+                                                                    <div className="float-end arrow-none card-drop p-0" >
+                                                                        <i className="dripicons-clockwise noti-icon" title={_('Redeploy')}
+                                                                            style={{ marginRight: "10px" }}
+                                                                            onClick={() => { redeployApp(app) }}>
+                                                                        </i>
+                                                                        <i className="dripicons-trash noti-icon" title={_('Remove')} onClick={() => { deleteApp(app, "inactive") }}></i>
+                                                                    </div>
+                                                                    <div className="clearfix"></div>
+                                                                </>
+                                                            ) : app.status === 4 ? // Error
+                                                                (
+                                                                    <>
+                                                                        <div className="float-end arrow-none card-drop p-0" >
+                                                                            <i className="dripicons-information noti-icon" style={{ paddingRight: "10px" }} onClick={() => { showError(app) }}></i>
+                                                                            <i className="dripicons-trash noti-icon" onClick={() => { deleteApp(app, "error") }}></i>
+                                                                        </div>
+                                                                        <div className="clearfix"></div>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="float-end arrow-none card-drop p-0">
+                                                                            <i className="dripicons-empty noti-icon"></i>
+                                                                        </div>
+                                                                        <div className="clearfix"></div>
+                                                                    </>
+                                                                )
+                                                    }
+                                                    <div>
+                                                        <img
+                                                            src={`${baseURL}/media/logos/${app?.app_name}-websoft9.png`}
+                                                            alt={app?.app_name}
+                                                            className="app-icon"
+                                                            style={{ margin: "20px 10px 20px 10px" }}
+                                                            onError={(e) => (e.target.src = DefaultImg)}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="appstore-item-content-title" style={{ color: "#2196f3" }}>
+                                                            {app.app_id}
+                                                        </h3>
+                                                        {
+                                                            official_app ?
+                                                                (
+                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        {app.status === 3 && <Spinner className="spinner-border-sm m-2" />}
+                                                                        {" "}
+                                                                        <div className="m-2">
+                                                                            <Badge className={getStatusBadgeClass(app.status)}>
+                                                                                {
+                                                                                    (() => {
+                                                                                        switch (app.status) {
+                                                                                            case 1: return "Active";
+                                                                                            case 2: return "Inactive";
+                                                                                            case 3: return "Installing";
+                                                                                            case 4: return "Error";
+                                                                                            default: return "Unknown";
+                                                                                        }
+                                                                                    })()
+                                                                                }
+                                                                            </Badge>
+                                                                        </div>
+                                                                    </div>
+                                                                ) :
+                                                                (
+                                                                    <div style={{ visibility: 'hidden', display: 'flex' }}>
+                                                                        <div className="m-2"> </div>
+                                                                    </div>
+                                                                )
+                                                        }
+                                                    </div>
+                                                </div >
+                                            </Col>
+                                        )
+                                    })}
+                                </Row >
+                            )
+                        }
+                    })
                 }
                 {
                     showModal && selectedApp && selectedApp.status === 1 &&
                     <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
                 }
                 {
-                    showRemoveConform &&
-                    <RemoveAppConform showConform={showRemoveConform} onClose={canceldeleteApp} app={selectedApp} onDataChange={handleDataChange} />
+                    showRemoveConform && selectedApp && (selectedApp.status === 4 || selectedApp.status === 2) &&
+                    <RemoveAppConform showConform={showRemoveConform} onClose={canceldeleteApp} app={selectedApp} onDataChange={handleDataChange} deleteType={deleteType} />
                 }
                 {
-                    showRedeployConform &&
+                    showRedeployConform && selectedApp && selectedApp.status === 2 &&
                     <RedeployAppConform showConform={showRedeployConform} onClose={cancelredeployApp} app={selectedApp} onDataChange={handleDataChange} />
+                }
+                {
+                    showErrorInfo && selectedApp && selectedApp.status === 4 &&
+                    <ErrorInfoModal showConform={showErrorInfo} onClose={cancelShowError} app={selectedApp} />
                 }
                 {
                     showAlert &&

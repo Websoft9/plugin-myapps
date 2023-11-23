@@ -1,20 +1,31 @@
 // @flow
 import {
-    AppDomainAdd,
     AppDomainCreateByAppID,
-    AppDomainDelete,
     AppDomainDeleteByProxyID,
-    AppDomainList, AppDomainSet, AppDomainUpdate, AppDomainUpdateByProxyID,
-    AppSearchUsers,
+    AppDomainList,
+    AppDomainUpdateByProxyID,
     Apps,
     RedeployApp,
     RemoveApp,
+    RemoveErrorApp,
     RestartApp,
     StartApp,
-    StopApp, UninstallApp
+    StopApp,
+    UninstallApp
 } from './appHub';
 
 export {
-    AppDomainAdd, AppDomainCreateByAppID, AppDomainDelete, AppDomainDeleteByProxyID, AppDomainList, AppDomainSet, AppDomainUpdate, AppDomainUpdateByProxyID, AppSearchUsers, Apps, RedeployApp, RemoveApp, RestartApp, StartApp, StopApp, UninstallApp
+    AppDomainCreateByAppID,
+    AppDomainDeleteByProxyID,
+    AppDomainList,
+    AppDomainUpdateByProxyID,
+    Apps,
+    RedeployApp,
+    RemoveApp,
+    RemoveErrorApp,
+    RestartApp,
+    StartApp,
+    StopApp,
+    UninstallApp
 };
 

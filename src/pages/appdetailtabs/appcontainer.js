@@ -79,7 +79,6 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                             cockpit.file('/etc/hosts').watch(content => {
                                                                 cockpit.jump(url);
                                                             });
-
                                                         }} title='Stats'>
                                                             <i className="dripicons-graph-bar noti-icon"></i>{' '}
                                                         </a>
@@ -111,7 +110,6 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                     }>
                                                     <div>{container.Image?.length > 20 ? container.Image.substring(0, 20) + "..." : container.Image}</div>
                                                 </OverlayTrigger>
-
                                             </td>
                                             <td>{new Date(container.Created * 1000).toLocaleString()}</td>
                                             {/* <td>{container.NetworkSettings.Networks[container.HostConfig.NetworkMode].IPAddress}</td> */}

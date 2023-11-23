@@ -247,6 +247,10 @@
         null,
         "编辑"
     ],
+    "Compose": [
+        null,
+        "编排"
+    ],
     "delete": [
         null,
         "删除"
@@ -354,6 +358,10 @@
     "This application consists of the following containers, and the one named $0 is the main container.": [
         null,
         "本应用由如下容器组成，名称为 $0 的为主容器"
+    ],
+    "No Apps Found": [
+        null,
+        "没有检索到相关应用"
     ],
     "Actions": [
         null,
@@ -490,6 +498,50 @@
     "Mount point": [
         null,
         "挂载点"
+    ],
+    "Rebuild the application after orchestrating it on-demand. Suitable for users familiar with Docker.": [
+        null,
+        "对应用进行按需编排后重建应用，适用熟悉Docker的用户操作"
+    ],
+    "Modify the Git repository for this application.": [
+        null,
+        "修改当前应用的Git仓库"
+    ],
+    "Websoft9's applications adopt the popular GitOps pattern in cloud-native architecture, where the orchestration source code of the application is codified and stored in a Git repository.": [
+        null,
+        "Websoft9的应用采用云原生架构中流行的GitOps模式，将应用的编排源码化并存储在Git仓库中。"
+    ],
+    "Prompt Adjustment": [
+        null,
+        "马上修改"
+    ],
+    "Back": [
+        null,
+        "返回"
+    ],
+    "Rebuild the application after orchestrating it on-demand.": [
+        null,
+        "按需编排应用程序后重新生成应用程序。"
+    ],
+    "Host": [
+        null,
+        "主机"
+    ],
+    "Port": [
+        null,
+        "端口"
+    ],
+    "App Id": [
+        null,
+        "应用Id"
+    ],
+    "W9_HTTP_PORT_SET": [
+        null,
+        "应用 HTTP 端口"
+    ],
+    "W9_DB_PORT_SET": [
+        null,
+        "数据库端口"
     ]
 }));
 

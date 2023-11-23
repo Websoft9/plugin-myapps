@@ -45,7 +45,8 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
     let domains = props?.data?.domain_names;
     domains = [...domains].sort((a, b) => a.id - b.id);
     const env = props?.data?.env;
-    const app_port = props?.data?.app_port;
+    const app_port = props?.data?.env?.W9_HTTP_PORT_SET
+    const is_web_app = !!props?.data?.env?.W9_URL; //判断是否是web应用
 
     const tagsInputRef = useRef();
 
@@ -137,84 +138,87 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                     </div>
                 )}
                 <Card.Body>
-                    <Accordion /*defaultExpanded={true}*/ expanded={true} /*onChange={handleChangefordomin}*/ className='mb-2'>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            aria-controls="panel1a-content"
-                            id="panel1a-header"
-                        >
-                            <Typography>
-                                <label className="me-2 fs-5 d-block">{_("Domain Access")}</label>
-                                <span className="me-2 fs-6" style={{ display: isExpandedForDomain ? 'inline' : 'none' }}>
-                                    {_("Access the domain name for better application performance, https and custom configuration can click")}
-                                    {" "}
-                                    <a href="#" onClick={(e) => {
-                                        e.preventDefault();
-                                        let url = `nginx#/w9proxy/nginx/proxy`;
-                                        cockpit.file('/etc/hosts').watch(content => {
-                                            cockpit.jump(url);
-                                        });
-                                    }} >
-                                        {_("more")}
-                                    </a>
-                                </span>
-                            </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Typography>
-                                <Card>
-                                    <Card.Header>
-                                        <Row className="mb-2 align-items-center">
-                                            <Col xs={12} md={12} className="d-flex justify-content-end">
-                                                {
-                                                    domains.length === 0 &&
-                                                    <Button variant="primary" size="sm" className="me-2" onClick={() => { addDominRow(); }}>{_("Add Domain")}</Button>
-                                                }
-                                                {
-                                                    domains.length > 0 && domains[0].domain_names && env.APP_ADMIN_PATH && (
-                                                        <a href={"http://" + domains[0].domain_names[domains[0].domain_names.length - 1] + env.APP_ADMIN_PATH} target="_blank" className="me-2">
-                                                            <Button variant="primary" size="sm">{_("Admin Page")}</Button>
-                                                        </a>
-                                                    )
-                                                }
-                                            </Col>
-                                        </Row>
-                                    </Card.Header>
-                                    <Card.Body>
-                                        {domains.map((row, index) => (
-                                            <Row className="mb-2" key={index}>
-                                                <Col xs={12} className="d-flex justify-content-between">
-                                                    <Col>
-                                                        <TagsInput initialTags={row?.domain_names} proxy_id={row?.id} onDataChange={props.onDataChange} />
-                                                    </Col>
-                                                </Col>
-                                            </Row>
-                                        ))}
-
-                                        {newDomainRows.map((row, index) => (
-                                            <Row className="mb-2" key={index}>
-                                                <Col xs={12} className="d-flex justify-content-between">
-                                                    <Col>
-                                                        <TagsInput initialTags={row.domain_names}
-                                                            app_id={props?.data?.app_id}
-                                                            newlyAdded
-                                                            defaultEditable
-                                                            ref={tagsInputRef}
-                                                            onSaveRow={() => handleSaveRow(index)}
-                                                            onDeleteRow={() => deletDomaineRow(index)}
-                                                            onDataChange={props.onDataChange}
-                                                        />
-                                                    </Col>
-                                                </Col>
-                                            </Row>
-                                        ))}
-                                    </Card.Body>
-                                </Card >
-                            </Typography>
-                        </AccordionDetails>
-                    </Accordion>
                     {
-                        domains.length === 0 && env && app_port &&
+                        is_web_app &&
+                        <Accordion /*defaultExpanded={true}*/ expanded={true} /*onChange={handleChangefordomin}*/ className='mb-2'>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls="panel1a-content"
+                                id="panel1a-header"
+                            >
+                                <Typography>
+                                    <label className="me-2 fs-5 d-block">{_("Domain Access")}</label>
+                                    <span className="me-2 fs-6" style={{ display: isExpandedForDomain ? 'inline' : 'none' }}>
+                                        {_("Access the domain name for better application performance, https and custom configuration can click")}
+                                        {" "}
+                                        <a href="#" onClick={(e) => {
+                                            e.preventDefault();
+                                            let url = `nginx#/w9proxy/nginx/proxy`;
+                                            cockpit.file('/etc/hosts').watch(content => {
+                                                cockpit.jump(url);
+                                            });
+                                        }} >
+                                            {_("more")}
+                                        </a>
+                                    </span>
+                                </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Typography>
+                                    <Card>
+                                        <Card.Header>
+                                            <Row className="mb-2 align-items-center">
+                                                <Col xs={12} md={12} className="d-flex justify-content-end">
+                                                    {
+                                                        domains.length === 0 &&
+                                                        <Button variant="primary" size="sm" className="me-2" onClick={() => { addDominRow(); }}>{_("Add Domain")}</Button>
+                                                    }
+                                                    {
+                                                        domains.length > 0 && domains[0].domain_names && env.W9_ADMIN_PATH && (
+                                                            <a href={"http://" + domains[0].domain_names[domains[0].domain_names.length - 1] + env.W9_ADMIN_PATH} target="_blank" className="me-2">
+                                                                <Button variant="primary" size="sm">{_("Admin Page")}</Button>
+                                                            </a>
+                                                        )
+                                                    }
+                                                </Col>
+                                            </Row>
+                                        </Card.Header>
+                                        <Card.Body>
+                                            {domains.map((row, index) => (
+                                                <Row className="mb-2" key={index}>
+                                                    <Col xs={12} className="d-flex justify-content-between">
+                                                        <Col>
+                                                            <TagsInput initialTags={row?.domain_names} proxy_id={row?.id} onDataChange={props.onDataChange} />
+                                                        </Col>
+                                                    </Col>
+                                                </Row>
+                                            ))}
+
+                                            {newDomainRows.map((row, index) => (
+                                                <Row className="mb-2" key={index}>
+                                                    <Col xs={12} className="d-flex justify-content-between">
+                                                        <Col>
+                                                            <TagsInput initialTags={row.domain_names}
+                                                                app_id={props?.data?.app_id}
+                                                                newlyAdded
+                                                                defaultEditable
+                                                                ref={tagsInputRef}
+                                                                onSaveRow={() => handleSaveRow(index)}
+                                                                onDeleteRow={() => deletDomaineRow(index)}
+                                                                onDataChange={props.onDataChange}
+                                                            />
+                                                        </Col>
+                                                    </Col>
+                                                </Row>
+                                            ))}
+                                        </Card.Body>
+                                    </Card >
+                                </Typography>
+                            </AccordionDetails>
+                        </Accordion>
+                    }
+                    {
+                        is_web_app && domains.length === 0 && env && app_port &&
                         <Accordion defaultExpanded={true} onChange={handleChangefornodomin} className='mb-2'>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
@@ -239,11 +243,11 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                 </a>
                                             </div>
                                             {
-                                                env.APP_ADMIN_PATH && (
+                                                env.W9_ADMIN_PATH && (
                                                     <div>
                                                         <label className="me-2 fs-5">{_("Backend")}:</label>
-                                                        <a href={`${baseURL}:${app_port}${env?.APP_ADMIN_PATH}`} target="_blank" className="me-2">
-                                                            {`${baseURL}:${app_port}${env?.APP_ADMIN_PATH}`}
+                                                        <a href={`${baseURL}:${app_port}${env?.W9_ADMIN_PATH}`} target="_blank" className="me-2">
+                                                            {`${baseURL}:${app_port}${env?.W9_ADMIN_PATH}`}
                                                         </a>
                                                     </div>
                                                 )
@@ -256,8 +260,8 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                         </Accordion>
                     }
                     {
-                        env && env.APP_USER && env.APP_PASSWORD &&
-                        <Accordion className='mb-2' onChange={handleChangeforaccount}>
+                        env && env.W9_USER && env.W9_PASSWORD &&
+                        <Accordion defaultExpanded={!is_web_app ? true : false} className='mb-2' onChange={handleChangeforaccount}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
                                 aria-controls="panel3a-content"
@@ -283,7 +287,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                         type="text"
                                                         name="username"
                                                         id="username"
-                                                        defaultValue={env.APP_USER}
+                                                        defaultValue={env.W9_USER}
                                                         readOnly
                                                     />
                                                 </Col>
@@ -298,12 +302,12 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                         type="password"
                                                         name="password"
                                                         containerClass={'mb-3'}
-                                                        value={env.APP_PASSWORD}
+                                                        value={env.W9_PASSWORD}
                                                         readOnly
                                                     />
                                                 </Col>
                                                 <Col md={1}>
-                                                    <IconButton title='Copy' onClick={() => copyToClipboard(env.APP_PASSWORD)}>
+                                                    <IconButton title='Copy' onClick={() => copyToClipboard(env.W9_PASSWORD)}>
                                                         <FileCopyIcon />
                                                     </IconButton>
                                                 </Col>

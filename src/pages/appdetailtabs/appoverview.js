@@ -16,38 +16,40 @@ const AppOverview = (props): React$Element<React$FragmentType> => {
                         <Table responsive className="mb-0" bordered={false} style={{ display: 'flex' }}>
                             <tbody>
                                 <tr>
-                                    <td style={{ fontWeight: "bold" }}>{_("App Name")}:</td>
+                                    <td style={{ fontWeight: "bold" }}>{_("App Id")}:</td>
                                     <td>{props.data?.app_id}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ fontWeight: "bold" }}>{_("App Name")}:</td>
+                                    <td>{props.data?.app_name}</td>
                                 </tr>
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("App Version")}:</td>
                                     <td>{props.data?.app_version}</td>
                                 </tr>
-                                <tr>
+                                {/* <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("App Port")}:</td>
                                     <td>{props.data?.app_port}</td>
-                                </tr>
+                                </tr> */}
+                                {
+                                    Object.entries(props.data?.env || {}).map(([key, value]) => {
+                                        if (key.endsWith("PORT_SET")) {
+                                            return (
+                                                <tr key={key}>
+                                                    <td style={{ fontWeight: "bold" }}>{_(key)}:</td>
+                                                    <td>{value}</td>
+                                                </tr>
+                                            );
+                                        }
+                                        return null;
+                                    })
+                                }
                                 <tr>
                                     <td style={{ fontWeight: "bold" }}>{_("Created Time")}:</td>
                                     <td>
                                         {props.data?.creationDate
                                             ? new Date(props.data.creationDate * 1000).toLocaleString()
                                             : null}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style={{ fontWeight: "bold" }}>{_("App Config")}:</td>
-                                    <td>
-                                        <a href="#" onClick={(e) => {
-                                            e.preventDefault();
-                                            let user_name = props.data?.gitConfig?.Authentication?.Username || "websoft9"
-                                            let url = `gitea#/w9git/${user_name}/${props.data?.app_id}`;
-                                            cockpit.file('/etc/hosts').watch(content => {
-                                                cockpit.jump(url);
-                                            });
-                                        }} title=''>
-                                            {_("View Config")}
-                                        </a>
                                     </td>
                                 </tr>
                             </tbody>
