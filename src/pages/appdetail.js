@@ -130,9 +130,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
     const [showRedeployConform, setShowRedeployConform] = useState(false); //用于显示状态为inactive时显示确定重建的弹窗
 
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
+    const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
     let stateResult = '';
     if (currentApp && currentApp.containers) {

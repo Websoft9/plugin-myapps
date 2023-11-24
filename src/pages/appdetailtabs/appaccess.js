@@ -38,9 +38,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
     const [isExpandedForNoDomain, setIsExpandedForNoDomain] = React.useState(true);//用于保存“无域名访问”的折叠状态
     const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“无域名访问”的折叠状态
 
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    const baseURL = protocol + "//" + (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(host) ? host.split(":")[0] : host);
+    const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
     let domains = props?.data?.domain_names;
     domains = [...domains].sort((a, b) => a.id - b.id);
