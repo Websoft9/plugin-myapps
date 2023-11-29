@@ -10,6 +10,7 @@ import classNames from 'classnames';
 import cockpit from "cockpit";
 import React, { useState } from 'react';
 import { Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
+import ReactDOM from 'react-dom';
 import Spinner from '../../components/Spinner';
 import { RedeployApp } from '../../helpers';
 
@@ -25,6 +26,7 @@ const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
 const RedeployAppConform = (props): React$Element<React$FragmentType> => {
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
+    const [alertType, setAlertType] = useState("error");//用于显示错误提示类型
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [pullImage, setPullImage] = useState(false); //重建时是否重新拉取镜像
     const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
@@ -85,6 +87,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                             closeAllModals();
                         }
                         catch (error) {
+                            setAlertType("error");
                             setShowAlert(true);
                             setAlertMessage(error.message);
                         }
@@ -98,13 +101,24 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                     </Button>
                 </Modal.Footer>
             </Modal >
-            {
+            {/* {
                 showAlert &&
                 <Snackbar open={showAlert} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
                     <MyMuiAlert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
                         {alertMessage}
                     </MyMuiAlert>
                 </Snackbar>
+            } */}
+            {
+                showAlert &&
+                ReactDOM.createPortal(
+                    <Snackbar open={showAlert} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} style={{ zIndex: 9999 }}>
+                        <MyMuiAlert onClose={handleClose} severity={alertType} sx={{ width: '100%' }}>
+                            {alertMessage}
+                        </MyMuiAlert>
+                    </Snackbar>,
+                    document.body
+                )
             }
         </>
     );

@@ -103,6 +103,79 @@ const DeleteDomainConform = (props) => {
     );
 }
 
+const UpdateDomainConform = (props) => {
+    const [disable, setDisable] = useState(false);//用于按钮禁用
+    const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
+    const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
+    const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
+    const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setShowAlert(false);
+        setAlertMessage("");
+    };
+
+    return (
+        <>
+            <Modal show={props.showConform} onHide={props.onClose} size="lg"
+                scrollable="true" backdrop="static" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+                <Modal.Header onHide={props.onClose} className={classNames('modal-colored-header', 'bg-warning')}>
+                    <h4>{_("Update domain binding")}</h4>
+                </Modal.Header>
+                <Modal.Body className="row" >
+                    <span style={{ margin: "10px 0px" }}>{_("Are you sure you want to update the domain for:")}</span>
+                    <span style={{ fontWeight: 'bold' }}>{props.domains.join(", ")}{" ?"}</span>
+                </Modal.Body>
+                <Modal.Footer>
+                    {
+                        showCloseButton && (
+                            <Button variant="light" onClick={props.onClose}>
+                                {_("Close")}
+                            </Button>
+                        )}
+                    {" "}
+                    <Button disabled={disable} variant="warning" onClick={async () => {
+                        setDisable(true);
+                        setShowCloseButton(false);
+                        try {
+                            await AppDomainUpdateByProxyID(props.proxy_id, null, { "domain_names": props.domains });
+                            props.closeEdit();
+                            props.onDataChange();
+                            props.onClose();
+                        }
+                        catch (error) {
+                            setAlertType("error");
+                            setShowAlert(true);
+                            setAlertMessage(error.message);
+                        }
+                        finally {
+                            setDisable(false);
+                            setShowCloseButton(true);
+                        }
+                    }
+                    }>
+                        {disable && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />} {_("Update")}
+                    </Button>
+                </Modal.Footer>
+            </Modal >
+            {
+                showAlert &&
+                ReactDOM.createPortal(
+                    <Snackbar open={showAlert} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} style={{ zIndex: 9999 }}>
+                        <MyMuiAlert onClose={handleClose} severity={alertType} sx={{ width: '100%' }}>
+                            {alertMessage}
+                        </MyMuiAlert>
+                    </Snackbar>,
+                    document.body
+                )
+            }
+        </>
+    );
+}
+
 const TagsInput = forwardRef(({
     app_id, proxy_id,
     initialTags = [],
@@ -122,6 +195,7 @@ const TagsInput = forwardRef(({
     const [latestInitialTags, setLatestInitialTags] = useState(initialTags);
     const [isNewlyAddedEditable, setIsNewlyAddedEditable] = useState(false);
     const [showRemoveDomain, setShowRemoveDomain] = useState(false); //用于是否显示删除域名的弹窗
+    const [showUpdateDomain, setShowUpdateDomain] = useState(false); //用于是否显示更新域名的弹窗
     const [currentProxyId, setCurrentProxyId] = useState(null); //用于判断是否是当前的proxy_id
     const initialTagsRef = useRef(initialTags);
     const inputRef = useRef();
@@ -228,6 +302,22 @@ const TagsInput = forwardRef(({
 
     const handleCloseClick = useCallback(() => {
         setShowRemoveDomain(false)
+    }, []);
+
+    const handleUpdateClick = useCallback(() => {
+        if (tempTags.length === 0) {
+            inputRef.current.focus();
+            setAlertType("error");
+            setShowAlert(true);
+            setAlertMessage(_("Please enter a domain name"));
+        } else {
+            setShowUpdateDomain(true);
+            setCurrentProxyId(proxy_id);
+        }
+    }, [tempTags]);
+
+    const handleUpdateCloseClick = useCallback(() => {
+        setShowUpdateDomain(false)
     }, []);
 
     const handleDeleteRowClick = useCallback(() => {
@@ -341,7 +431,7 @@ const TagsInput = forwardRef(({
                             </React.Fragment>
                         ) : (
                             <React.Fragment>
-                                <IconButton onClick={handleSaveClick}>
+                                <IconButton onClick={handleUpdateClick}>
                                     <SaveIcon />
                                 </IconButton>
                                 <IconButton onClick={handleCancelClick}>
@@ -375,6 +465,13 @@ const TagsInput = forwardRef(({
             {
                 showRemoveDomain &&
                 <DeleteDomainConform proxy_id={proxy_id} domains={tags} showConform={handleDeleteClick} onClose={handleCloseClick} onDataChange={onDataChange} />
+            }
+            {
+                showUpdateDomain &&
+                <UpdateDomainConform proxy_id={proxy_id} domains={tempTags}
+                    showConform={handleUpdateClick} onClose={handleUpdateCloseClick} onDataChange={onDataChange}
+                    closeEdit={handleCancelClick}
+                />
             }
             {
                 showAlert &&

@@ -45,6 +45,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
     const env = props?.data?.env;
     const app_port = props?.data?.env?.W9_HTTP_PORT_SET
     const is_web_app = !!props?.data?.env?.W9_URL; //判断是否是web应用
+    const w9_url = props?.data?.env?.W9_URL;
 
     const tagsInputRef = useRef();
 
@@ -172,8 +173,8 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                         <Button variant="primary" size="sm" className="me-2" onClick={() => { addDominRow(); }}>{_("Add Domain")}</Button>
                                                     }
                                                     {
-                                                        domains.length > 0 && domains[0].domain_names && env.W9_ADMIN_PATH && (
-                                                            <a href={"http://" + domains[0].domain_names[domains[0].domain_names.length - 1] + env.W9_ADMIN_PATH} target="_blank" className="me-2">
+                                                        domains.length > 0 && w9_url && env.W9_ADMIN_PATH && (
+                                                            <a href={"http://" + w9_url + env.W9_ADMIN_PATH} target="_blank" className="me-2">
                                                                 <Button variant="primary" size="sm">{_("Admin Page")}</Button>
                                                             </a>
                                                         )

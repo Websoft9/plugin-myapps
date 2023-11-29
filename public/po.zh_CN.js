@@ -279,13 +279,25 @@
         null,
         "你确定删除绑定的域名："
     ],
+    "Are you sure you want to update the domain for:": [
+        null,
+        "你确定修改绑定的域名："
+    ],
     "Success": [
         null,
         "执行成功"
     ],
+    "Update": [
+        null,
+        "更新"
+    ],
     "Delete domain binding": [
         null,
         "删除绑定域名"
+    ],
+    "Update domain binding": [
+        null,
+        "修改绑定域名"
     ],
     "saving...": [
         null,
