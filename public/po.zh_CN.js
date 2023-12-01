@@ -363,13 +363,25 @@
         null,
         "添加域名"
     ],
+    "Add": [
+        null,
+        "添加"
+    ],
     "Admin Page": [
         null,
         "访问后台"
     ],
+    "Add domain binding": [
+        null,
+        "添加域名绑定"
+    ],
     "This application consists of the following containers, and the one named $0 is the main container.": [
         null,
         "本应用由如下容器组成，名称为 $0 的为主容器"
+    ],
+    "Are you sure you want to add the domain for:": [
+        null,
+        "你确定绑定域名："
     ],
     "No Apps Found": [
         null,

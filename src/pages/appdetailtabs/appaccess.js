@@ -36,8 +36,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
 
     const [isExpandedForDomain, setIsExpandedForDomain] = React.useState(true); //用于保存“域名绑定”的折叠状态
     const [isExpandedForNoDomain, setIsExpandedForNoDomain] = React.useState(true);//用于保存“无域名访问”的折叠状态
-    const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“无域名访问”的折叠状态
-
+    const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“初始账号”的折叠状态
     const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
     let domains = props?.data?.domain_names;
@@ -268,7 +267,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                             >
                                 <Typography>
                                     <label className="me-2 fs-5 d-block">{_("Initial Account")}</label>
-                                    <span className="me-2 fs-6" style={{ display: isExpandedForAccount ? 'inline' : 'none' }}>
+                                    <span className="me-2 fs-6">
                                         {_("This application is pre-configured with an administrator account, please change the administrator password immediately. The initial credentials are:")}
                                     </span>
                                 </Typography>

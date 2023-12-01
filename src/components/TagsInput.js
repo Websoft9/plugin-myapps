@@ -176,6 +176,81 @@ const UpdateDomainConform = (props) => {
     );
 }
 
+const AddDomainConform = (props) => {
+    const [disable, setDisable] = useState(false);//用于按钮禁用
+    const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
+    const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
+    const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
+    const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setShowAlert(false);
+        setAlertMessage("");
+    };
+
+    return (
+        <>
+            <Modal show={props.showConform} onHide={props.onClose} size="lg"
+                scrollable="true" backdrop="static" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+                <Modal.Header onHide={props.onClose} className={classNames('modal-colored-header', 'bg-warning')}>
+                    <h4>{_("Add domain binding")}</h4>
+                </Modal.Header>
+                <Modal.Body className="row" >
+                    <span style={{ margin: "10px 0px" }}>
+                        {_("Are you sure you want to add the domain for:")}
+                    </span>
+                    <span style={{ fontWeight: 'bold' }}>{props.domains.join(", ")}{" ?"}</span>
+                </Modal.Body>
+                <Modal.Footer>
+                    {
+                        showCloseButton && (
+                            <Button variant="light" onClick={props.onClose}>
+                                {_("Close")}
+                            </Button>
+                        )}
+                    {" "}
+                    <Button disabled={disable} variant="warning" onClick={async () => {
+                        setDisable(true);
+                        setShowCloseButton(false);
+                        try {
+                            await AppDomainCreateByAppID(props.app_id, null, { "domain_names": props.domains });
+                            props.onDataChange();
+                            props.onDeleteRow();
+                            props.onClose();
+                        }
+                        catch (error) {
+                            setAlertType("error");
+                            setShowAlert(true);
+                            setAlertMessage(error.message);
+                        }
+                        finally {
+                            setDisable(false);
+                            setShowCloseButton(true);
+                        }
+                    }
+                    }>
+                        {disable && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />} {_("Add")}
+                    </Button>
+                </Modal.Footer>
+            </Modal >
+            {
+                showAlert &&
+                ReactDOM.createPortal(
+                    <Snackbar open={showAlert} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }} style={{ zIndex: 9999 }}>
+                        <MyMuiAlert onClose={handleClose} severity={alertType} sx={{ width: '100%' }}>
+                            {alertMessage}
+                        </MyMuiAlert>
+                    </Snackbar>,
+                    document.body
+                )
+            }
+        </>
+    );
+}
+
 const TagsInput = forwardRef(({
     app_id, proxy_id,
     initialTags = [],
@@ -196,6 +271,7 @@ const TagsInput = forwardRef(({
     const [isNewlyAddedEditable, setIsNewlyAddedEditable] = useState(false);
     const [showRemoveDomain, setShowRemoveDomain] = useState(false); //用于是否显示删除域名的弹窗
     const [showUpdateDomain, setShowUpdateDomain] = useState(false); //用于是否显示更新域名的弹窗
+    const [showAddDomain, setShowAddDomain] = useState(false); //用于是否显示添加域名的弹窗
     const [currentProxyId, setCurrentProxyId] = useState(null); //用于判断是否是当前的proxy_id
     const initialTagsRef = useRef(initialTags);
     const inputRef = useRef();
@@ -203,6 +279,7 @@ const TagsInput = forwardRef(({
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
+
 
     const options = useMemo(() => {
         const optionsToExclude = new Set(tempTags);
@@ -237,33 +314,6 @@ const TagsInput = forwardRef(({
         setTempTags(tags);
     }, [tags]);
 
-    const handleSaveClick = useCallback(async () => {
-        if (tempTags.length === 0) {
-            inputRef.current.focus();
-            setAlertType("error");
-            setShowAlert(true);
-            setAlertMessage(_("Please enter a domain name"));
-        } else {
-            try {
-                await AppDomainUpdateByProxyID(proxy_id, null, { "domain_names": tempTags });
-                setAlertType("success");
-                setShowAlert(true);
-                setAlertMessage(_("Saved successfully"));
-
-                setIsEditable(false);
-                setTags(tempTags);
-
-                onDataChange();
-            }
-            catch (error) {
-                setAlertType("error");
-                setShowAlert(true);
-                setAlertMessage(error.message);
-
-                inputRef.current.focus();
-            }
-        }
-    }, [tempTags]);
 
     const handleAddDomainSaveClick = useCallback(async () => {
         if (tempTags.length === 0) {
@@ -272,23 +322,14 @@ const TagsInput = forwardRef(({
             setAlertMessage(_("Domain name cannot be empty"));
             inputRef.current.focus();
         } else {
-            try {
-                await AppDomainCreateByAppID(app_id, null, { "domain_names": tempTags });
-                setAlertType("success");
-                setShowAlert(true);
-                setAlertMessage(_("Saved successfully"));
-                if (onDeleteRow) {
-                    onDeleteRow();
-                }
-                onDataChange();
-            }
-            catch (error) {
-                setAlertType("error");
-                setShowAlert(true);
-                setAlertMessage(error.message);
-            }
+            setShowAddDomain(true);
+            setTags(tempTags);
         }
     }, [tempTags]);
+
+    const handleAddCloseClick = useCallback(() => {
+        setShowAddDomain(false)
+    }, []);
 
     const handleCancelClick = useCallback(() => {
         setIsEditable(false);
@@ -462,6 +503,11 @@ const TagsInput = forwardRef(({
                     )}
                 </Grid>
             </Grid>
+            {
+                showAddDomain &&
+                <AddDomainConform app_id={app_id} domains={tempTags} onDeleteRow={onDeleteRow}
+                    showConform={handleAddDomainSaveClick} onClose={handleAddCloseClick} onDataChange={onDataChange} />
+            }
             {
                 showRemoveDomain &&
                 <DeleteDomainConform proxy_id={proxy_id} domains={tags} showConform={handleDeleteClick} onClose={handleCloseClick} onDataChange={onDataChange} />

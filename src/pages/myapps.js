@@ -227,12 +227,29 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const getApps = async () => {
         try {
             const newApps = await Apps();
+            const statusOrder = [3, 1, 2, 0, 4]; // 定义状态的排序顺序
+
+            // 创建一个映射表，用于将状态映射到其排序索引
+            const statusRank = statusOrder.reduce((acc, status, index) => {
+                acc[status] = index;
+                return acc;
+            }, {});
+
+            // 使用自定义的排序函数进行排序
             const sortedApps = newApps.sort((a, b) => {
-                if (a.status === b.status) {
-                    return a.app_id.localeCompare(b.app_id);
+                // 首先比较状态的优先级
+                if (statusRank[a.status] !== statusRank[b.status]) {
+                    return statusRank[a.status] - statusRank[b.status];
                 }
-                return a.status === 1 ? -1 : 1;
+                // 如果状态相同，则根据 creationDate 进行降序
+                return b.creationDate - a.creationDate;
             });
+            // const sortedApps = newApps.sort((a, b) => {
+            //     if (a.status === b.status) {
+            //         return a.app_id.localeCompare(b.app_id);
+            //     }
+            //     return a.status === 1 ? -1 : 1;
+            // });
 
             setApps(newApps);
             if (selectedAppRef.current) {
