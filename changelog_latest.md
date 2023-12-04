@@ -1,1 +1,1 @@
-1. nginx config update
+1. fix core code
