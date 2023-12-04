@@ -269,6 +269,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
     useEffect(() => {
         let timer = null;
+        let isMounted = true; // 增加一个标志来跟踪挂载状态
 
         const fetchData = async () => {
             try {
@@ -284,9 +285,13 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
         fetchData();
         timer = setInterval(async () => {
-            await getApps();
+            if (isMounted) { // 只有在组件挂载的情况下才调用 getApps
+                await getApps();
+            }
         }, 5000);
+
         return () => {
+            isMounted = false; // 在组件卸载时更新标志
             if (timer !== null) {
                 clearInterval(timer);
             }
