@@ -1,9 +1,10 @@
 import MuiAlert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
+import axios from 'axios';
 import classNames from 'classnames';
 import cockpit from 'cockpit';
 import React, { useEffect, useRef, useState } from 'react';
-import { Badge, Button, Col, Modal, Row } from 'react-bootstrap';
+import { Badge, Button, Col, Form, Modal, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import DefaultImg from '../assets/images/default.png';
 import FormInput from '../components/FormInput';
@@ -54,6 +55,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
+    const [pullImage, setPullImage] = useState(false); //重建时是否重新拉取镜像
 
     function closeAllModals() {
         window.location.reload(true);
@@ -76,6 +78,17 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                 </Modal.Header>
                 <Modal.Body className="row" >
                     <span style={{ margin: "10px 0px" }}>{_("This will be applied through local warehouse reconstruction. If the warehouse does not exist or there are errors in the warehouse file, the reconstruction will fail.")}</span>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <span style={{ fontWeight: "bold", marginRight: "10px" }}>{_("Re-pull image and redeploy:")}</span>
+                        < Form >
+                            <Form.Check
+                                type="switch"
+                                id="custom-switch"
+                                checked={pullImage}
+                                onChange={() => setPullImage(!pullImage)}
+                            />
+                        </Form>
+                    </div>
                 </Modal.Body>
                 <Modal.Footer>
                     {
@@ -90,7 +103,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                         setDisable(true);
                         setShowCloseButton(false);
                         try {
-                            await RedeployApp(props.app.app_id, { pullImage: true })
+                            await RedeployApp(props.app.app_id, { pullImage: pullImage });
                             closeAllModals();
                         }
                         catch (error) {
@@ -244,16 +257,10 @@ const MyApps = (): React$Element<React$FragmentType> => {
                 // 如果状态相同，则根据 creationDate 进行降序
                 return b.creationDate - a.creationDate;
             });
-            // const sortedApps = newApps.sort((a, b) => {
-            //     if (a.status === b.status) {
-            //         return a.app_id.localeCompare(b.app_id);
-            //     }
-            //     return a.status === 1 ? -1 : 1;
-            // });
 
-            setApps(newApps);
+            setApps(sortedApps);
             if (selectedAppRef.current) {
-                const updatedApp = newApps.find(
+                const updatedApp = sortedApps.find(
                     (app) => app.app_id === selectedAppRef.current.app_id
                 );
                 setSelectedApp(updatedApp);
@@ -263,13 +270,19 @@ const MyApps = (): React$Element<React$FragmentType> => {
             setError(null);
         }
         catch (error) {
-            setError(error?.message || "Fetch Data Error");
+            if (axios.isCancel(error)) {
+                //不做处理
+            } else {
+                setError(error?.response?.data?.message || "Fetch Data Error");
+                setLoading(false);
+            }
         }
     }
 
     useEffect(() => {
         let timer = null;
         let isMounted = true; // 增加一个标志来跟踪挂载状态
+        const cancelTokenSource = axios.CancelToken.source();
 
         const fetchData = async () => {
             try {
@@ -286,7 +299,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
         fetchData();
         timer = setInterval(async () => {
             if (isMounted) { // 只有在组件挂载的情况下才调用 getApps
-                await getApps();
+                await getApps(cancelTokenSource.token);
             }
         }, 5000);
 
@@ -295,6 +308,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
             if (timer !== null) {
                 clearInterval(timer);
             }
+            cancelTokenSource.cancel('Component got unmounted'); // 取消请求
         };
     }, []);
 
