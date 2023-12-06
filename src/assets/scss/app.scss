@@ -135,3 +135,11 @@ File: Main Css File
 .chip-hover {
     background-color: #5eba00 !important;
 }
+
+.password-span {
+    display: inline-block;
+    width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

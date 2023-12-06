@@ -11,6 +11,7 @@ import { RedeployApp, RestartApp, StartApp, StopApp } from '../helpers';
 import AppAccess from './appdetailtabs/appaccess';
 import AppCompose from './appdetailtabs/appcompose';
 import AppContainer from './appdetailtabs/appcontainer';
+import AppDatabases from './appdetailtabs/appdatabases';
 import AppOverview from './appdetailtabs/appoverview';
 import Uninstall from './appdetailtabs/appuninstall';
 import AppVolume from './appdetailtabs/appvolume';
@@ -130,6 +131,8 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
     const [showRedeployConform, setShowRedeployConform] = useState(false); //用于显示状态为inactive时显示确定重建的弹窗
 
+    const db_expose = props.current_app?.env?.W9_DB_EXPOSE; //判断应用是否有数据库
+
     const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
     let stateResult = '';
@@ -245,6 +248,15 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                 onDataChange={props.onDataChange} onCloseFatherModal={props.onClose} />,
         },
     ];
+    // 如果应用有数据库，添加数据库tab
+    if (db_expose) {
+        tabContents.splice(4, 0, {
+            id: '7',
+            title: _("Database"),
+            icon: 'mdi dripicons-stack',
+            text: <AppDatabases data={currentApp} />,
+        });
+    }
 
     return (
         <>

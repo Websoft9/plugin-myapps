@@ -487,13 +487,13 @@
         null,
         "重新提取镜像并重新部署："
     ],
-    "Password copied successfully": [
+    "Copied successfully": [
         null,
-        "密码复制成功"
+        "复制成功"
     ],
-    "Password copied failed": [
+    "Copied failed": [
         null,
-        "密码复制失败"
+        "复制失败"
     ],
     "Successfully deleted": [
         null,
@@ -558,6 +558,18 @@
     "App Id": [
         null,
         "应用Id"
+    ],
+    "Database": [
+        null,
+        "数据库"
+    ],
+    "Intranet Host": [
+        null,
+        "内网主机"
+    ],
+    "Recommended Tool": [
+        null,
+        "推荐管理工具"
     ],
     "W9_HTTP_PORT_SET": [
         null,

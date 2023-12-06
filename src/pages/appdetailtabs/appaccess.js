@@ -53,11 +53,11 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text).then(() => {
                 setShowAlert(true);
-                setAlertMessage(_("Password copied successfully"));
+                setAlertMessage(_("Copied successfully"));
                 setAlertType("success");
             }).catch(err => {
                 setShowAlert(true);
-                setAlertMessage(_("Password copied failed"));
+                setAlertMessage(_("Copied failed"));
                 setAlertType("error");
             });
         }
@@ -71,12 +71,12 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                 document.body.removeChild(textarea);
 
                 setShowAlert(true);
-                setAlertMessage(_("Password copied successfully"));
+                setAlertMessage(_("Copied successfully"));
                 setAlertType("success");
             }
             catch (err) {
                 setShowAlert(true);
-                setAlertMessage(_("Password copied failed"));
+                setAlertMessage(_("Copied failed"));
                 setAlertType("error");
             }
         }
