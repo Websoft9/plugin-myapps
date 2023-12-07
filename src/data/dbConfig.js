@@ -5,11 +5,11 @@ const dbConfig = {
     },
     mysql: {
         account: "root",
-        tool: "phpMyAdmin,CloudBeaver"",
+        tool: "phpMyAdmin,CloudBeaver",
     },
     postgresql: {
         account: "postgres",
-        tool: "pgAdmin,CloudBeaver"",
+        tool: "pgAdmin,CloudBeaver",
     },
     mongodb: {
         account: "root",
