@@ -132,6 +132,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [showRedeployConform, setShowRedeployConform] = useState(false); //用于显示状态为inactive时显示确定重建的弹窗
 
     const db_expose = props.current_app?.env?.W9_DB_EXPOSE; //判断应用是否有数据库
+    const app_volumes = props.current_app?.volumes; //获取应用的卷信息
 
     const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
@@ -230,18 +231,12 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         },
         {
             id: '4',
-            title: _("Volumes"),
-            icon: 'mdi dripicons-stack',
-            text: <AppVolume data={currentApp} />,
-        },
-        {
-            id: '5',
             title: _("Compose"),
             icon: 'mdi dripicons-stack',
             text: <AppCompose data={currentApp} />,
         },
         {
-            id: '6',
+            id: '5',
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
             text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}
@@ -255,6 +250,15 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             title: _("Database"),
             icon: 'mdi dripicons-stack',
             text: <AppDatabases data={currentApp} />,
+        });
+    }
+    // 如果应用有卷，添加卷存tab
+    if (app_volumes && app_volumes.length > 0) {
+        tabContents.splice(3, 0, {
+            id: '8',
+            title: _("Volumes"),
+            icon: 'mdi dripicons-stack',
+            text: <AppVolume data={currentApp} />,
         });
     }
 
