@@ -1,7 +1,7 @@
 cockpit.locale({
     "": {
         "plural-forms": (n) => 0,
-        "language": "zh-CN",
+        "language": "zh_CN",
         "language-direction": "ltr"
     },
     "App Store": [

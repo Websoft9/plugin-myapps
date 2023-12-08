@@ -5,7 +5,8 @@ import cockpit from 'cockpit';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Col, Form, Modal, Nav, OverlayTrigger, Row, Tab, Tooltip } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import DefaultImg from '../assets/images/default.png';
+import DefaultImgEn from '../assets/images/default_en.png';
+import DefaultImgzh from '../assets/images/default_zh.png';
 import Spinner from '../components/Spinner';
 import { RedeployApp, RestartApp, StartApp, StopApp } from '../helpers';
 import AppAccess from './appdetailtabs/appaccess';
@@ -18,6 +19,7 @@ import AppVolume from './appdetailtabs/appvolume';
 
 const _ = cockpit.gettext;
 const language = cockpit.language;//获取cockpit的当前语言环境
+const DefaultImg = language === "zh_CN" ? DefaultImgzh : DefaultImgEn;
 
 const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
