@@ -36,7 +36,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
 
     const [isExpandedForDomain, setIsExpandedForDomain] = React.useState(true); //用于保存“域名绑定”的折叠状态
     const [isExpandedForNoDomain, setIsExpandedForNoDomain] = React.useState(true);//用于保存“无域名访问”的折叠状态
-    const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“初始账号”的折叠状态
+    //const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“初始账号”的折叠状态
     const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
     let domains = props?.data?.domain_names;
@@ -45,6 +45,8 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
     const app_port = props?.data?.env?.W9_HTTP_PORT_SET
     const is_web_app = !!props?.data?.env?.W9_URL; //判断是否是web应用
     const w9_url = props?.data?.env?.W9_URL;
+
+    const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(!is_web_app ? true : false);
 
     const tagsInputRef = useRef();
 
@@ -258,7 +260,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                         </Accordion>
                     }
                     {
-                        env && env.W9_USER && env.W9_PASSWORD &&
+                        env && env.W9_LOGIN_USER && env.W9_LOGIN_PASSWORD &&
                         <Accordion defaultExpanded={!is_web_app ? true : false} className='mb-2' onChange={handleChangeforaccount}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
@@ -267,7 +269,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                             >
                                 <Typography>
                                     <label className="me-2 fs-5 d-block">{_("Initial Account")}</label>
-                                    <span className="me-2 fs-6">
+                                    <span className="me-2 fs-6" style={{ display: isExpandedForAccount ? 'inline' : 'none' }}>
                                         {_("This application is pre-configured with an administrator account, please change the administrator password immediately. The initial credentials are:")}
                                     </span>
                                 </Typography>
@@ -276,40 +278,56 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                 <Typography>
                                     <Card>
                                         <Card.Body>
-                                            <Form.Group as={Row} className="mb-3">
-                                                <Form.Label htmlFor="username" column md={2} className='fs-5'>
-                                                    {_("UserName")}
-                                                </Form.Label>
-                                                <Col md={4}>
-                                                    <Form.Control
-                                                        type="text"
-                                                        name="username"
-                                                        id="username"
-                                                        defaultValue={env.W9_USER}
-                                                        readOnly
-                                                    />
-                                                </Col>
-                                            </Form.Group>
-
-                                            <Form.Group as={Row} className="mb-3">
-                                                <Form.Label htmlFor="password" column md={2} className='fs-5'>
-                                                    {_("Password")}
-                                                </Form.Label>
-                                                <Col md={4}>
-                                                    <FormInput
-                                                        type="password"
-                                                        name="password"
-                                                        containerClass={'mb-3'}
-                                                        value={env.W9_PASSWORD}
-                                                        readOnly
-                                                    />
-                                                </Col>
-                                                <Col md={1}>
-                                                    <IconButton title='Copy' onClick={() => copyToClipboard(env.W9_PASSWORD)}>
-                                                        <FileCopyIcon />
-                                                    </IconButton>
-                                                </Col>
-                                            </Form.Group>
+                                            {Object.keys(env)
+                                                .filter(key => key.startsWith('W9_LOGIN'))
+                                                .sort((a, b) => {
+                                                    if (a.includes('PASSWORD') || b.includes('PASSWORD')) {
+                                                        if (a.includes('PASSWORD') && b.includes('PASSWORD')) return 0;
+                                                        return a.includes('PASSWORD') ? 1 : -1;
+                                                    }
+                                                    if (a.includes('USER') || b.includes('USER')) {
+                                                        if (a.includes('USER') && b.includes('USER')) return 0;
+                                                        return a.includes('USER') ? 1 : -1;
+                                                    }
+                                                    return 0;
+                                                })
+                                                .map((key, index) => {
+                                                    const isPassword = key.includes('PASSWORD');
+                                                    return (
+                                                        <Form.Group as={Row} className="mb-3" key={index}>
+                                                            <Form.Label htmlFor={key} column md={2} className='fs-5'>
+                                                                {_(key)}
+                                                            </Form.Label>
+                                                            <Col md={4}>
+                                                                {isPassword ? (
+                                                                    <FormInput
+                                                                        type="password"
+                                                                        name={key}
+                                                                        containerClass={'mb-3'}
+                                                                        value={env[key]}
+                                                                        readOnly
+                                                                    />
+                                                                ) : (
+                                                                    <Form.Control
+                                                                        type="text"
+                                                                        name={key}
+                                                                        id={key}
+                                                                        defaultValue={env[key]}
+                                                                        readOnly
+                                                                    />
+                                                                )}
+                                                            </Col>
+                                                            {isPassword &&
+                                                                <Col md={1}>
+                                                                    <IconButton title='Copy' onClick={() => copyToClipboard(env[key])}>
+                                                                        <FileCopyIcon />
+                                                                    </IconButton>
+                                                                </Col>
+                                                            }
+                                                        </Form.Group>
+                                                    );
+                                                })
+                                            }
                                         </Card.Body>
                                     </Card>
                                 </Typography>
