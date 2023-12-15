@@ -260,7 +260,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                         </Accordion>
                     }
                     {
-                        env && env.W9_LOGIN_USER && env.W9_LOGIN_PASSWORD &&
+                        env && Object.keys(env).some(key => key.startsWith('W9_LOGIN')) &&
                         <Accordion defaultExpanded={!is_web_app ? true : false} className='mb-2' onChange={handleChangeforaccount}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}

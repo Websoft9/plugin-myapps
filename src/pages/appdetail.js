@@ -132,9 +132,10 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
     const [showRedeployConform, setShowRedeployConform] = useState(false); //用于显示状态为inactive时显示确定重建的弹窗
+    const [showAccess, setShowAccess] = useState(false);
+    const [showDBExpose, setShowDBExpose] = useState(false);
+    const [showAppVolumes, setShowAppVolumes] = useState(false);
 
-    const db_expose = props.current_app?.env?.W9_DB_EXPOSE; //判断应用是否有数据库
-    const app_volumes = props.current_app?.volumes; //获取应用的卷信息
 
     const baseURL = `${window.location.protocol}//${window.location.hostname}`;
 
@@ -212,6 +213,26 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         }
     }, [props.current_app]);
 
+    useEffect(() => {
+        let access = false;
+        for (const key in props.current_app?.env) {
+            // 检查键是否以"W9_LOGIN"开头
+            if (key.startsWith('W9_LOGIN')) {
+                access = true;
+                break;
+            }
+        }
+
+        // 检查props.current_app.env.W9_URL是否存在
+        if (!!props.current_app?.env?.W9_URL) {
+            access = true;
+        }
+
+        setShowAccess(access);
+        setShowDBExpose(!!props.current_app?.env?.W9_DB_EXPOSE);
+        setShowAppVolumes(props.current_app?.volumes?.length > 0);
+    }, [props]);
+
     const tabContents = [
         {
             id: '1',
@@ -221,46 +242,46 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         },
         {
             id: '2',
-            title: _("Access"),
-            icon: 'mdi dripicons-web',
-            text: <AppAccess data={currentApp} onDataChange={props.onDataChange} />,
-        },
-        {
-            id: '3',
             title: _("Container"),
             icon: 'mdi dripicons-stack',
             text: <AppContainer data={currentApp} onDataChange={props.onDataChange} />,
         },
         {
-            id: '4',
+            id: '3',
             title: _("Compose"),
             icon: 'mdi dripicons-stack',
             text: <AppCompose data={currentApp} />,
         },
         {
-            id: '5',
+            id: '4',
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
             text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}
                 onDataChange={props.onDataChange} onCloseFatherModal={props.onClose} />,
         },
     ];
-    // 如果应用有数据库，添加数据库tab
-    if (db_expose) {
+    if (showAccess) {
+        tabContents.splice(1, 0, {
+            id: '5',
+            title: _("Access"),
+            icon: 'mdi dripicons-stack',
+            text: <AppAccess data={currentApp} onDataChange={props.onDataChange} />,
+        });
+    }
+    if (showAppVolumes) {
+        tabContents.splice(3, 0, {
+            id: '6',
+            title: _("Volumes"),
+            icon: 'mdi dripicons-stack',
+            text: <AppVolume data={currentApp} />,
+        });
+    }
+    if (showDBExpose) {
         tabContents.splice(4, 0, {
             id: '7',
             title: _("Database"),
             icon: 'mdi dripicons-stack',
             text: <AppDatabases data={currentApp} />,
-        });
-    }
-    // 如果应用有卷，添加卷存tab
-    if (app_volumes && app_volumes.length > 0) {
-        tabContents.splice(3, 0, {
-            id: '8',
-            title: _("Volumes"),
-            icon: 'mdi dripicons-stack',
-            text: <AppVolume data={currentApp} />,
         });
     }
 
