@@ -1,3 +1,5 @@
+## 0.1.4 release on 2023-12-21
+1. fix W9_LOGIN changes
 ## 0.1.4-rc3 release on 2023-12-15
 1. fix W9_LOGIN changes
 ## 0.1.4 release on 2023-12-15
