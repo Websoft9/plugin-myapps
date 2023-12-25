@@ -114,7 +114,16 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                             <td>{new Date(container.Created * 1000).toLocaleString()}</td>
                                             {/* <td>{container.NetworkSettings.Networks[container.HostConfig.NetworkMode].IPAddress}</td> */}
                                             <td>{container.NetworkSettings.Networks["websoft9"].IPAddress}</td>
-                                            <td>{container.Ports.find(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP))?.PublicPort}:{container.Ports.find(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP))?.PrivatePort}</td>
+                                            <td>{container.Ports.filter(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP))
+                                                .sort((a, b) => a.PublicPort - b.PublicPort)
+                                                .map((port, index) =>
+                                                    `${port.PublicPort}:${port.PrivatePort}`
+                                                ).join(', ')}
+                                            </td>
+
+
+                                            {/* <td>{container.Ports.filter(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP)).map((port) => `${port.PublicPort}:${port.PrivatePort}`).join(', ')}</td> */}
+                                            {/* <td>{container.Ports.find(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP))?.PublicPort}:{container.Ports.find(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP))?.PrivatePort}</td> */}
                                         </tr>
                                     );
                                 })}
