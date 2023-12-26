@@ -37,12 +37,14 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
     const [isExpandedForDomain, setIsExpandedForDomain] = React.useState(true); //用于保存“域名绑定”的折叠状态
     const [isExpandedForNoDomain, setIsExpandedForNoDomain] = React.useState(true);//用于保存“无域名访问”的折叠状态
     //const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“初始账号”的折叠状态
-    const baseURL = `${window.location.protocol}//${window.location.hostname}`;
+    //const baseURL = `${window.location.protocol}//${window.location.hostname}`;
+    const baseURL = `${window.location.hostname}`;
 
     let domains = props?.data?.domain_names;
     domains = [...domains].sort((a, b) => a.id - b.id);
     const env = props?.data?.env;
-    const app_port = props?.data?.env?.W9_HTTP_PORT_SET
+    const app_port = props?.data?.env?.W9_HTTP_PORT_SET || props?.data?.env?.W9_HTTPS_PORT_SET
+    const is_https = !!props?.data?.env?.W9_HTTPS_PORT_SET; //判断是否是https应用
     const is_web_app = !!props?.data?.env?.W9_URL; //判断是否是web应用
     const w9_url = props?.data?.env?.W9_URL;
 
@@ -175,7 +177,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                     }
                                                     {
                                                         domains.length > 0 && w9_url && env.W9_ADMIN_PATH && (
-                                                            <a href={"http://" + w9_url + env.W9_ADMIN_PATH} target="_blank" className="me-2">
+                                                            <a href={`${is_https ? 'https' : 'http'}://${w9_url}${env.W9_ADMIN_PATH}`} target="_blank" className="me-2">
                                                                 <Button variant="primary" size="sm">{_("Admin Page")}</Button>
                                                             </a>
                                                         )
@@ -238,16 +240,16 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                         <Card.Body>
                                             <div>
                                                 <label className="me-2 fs-5">{_("Frontend")}:</label>
-                                                <a href={`${baseURL}:${app_port}`} target="_blank" className="me-2">
-                                                    {`${baseURL}:${app_port}`}
+                                                <a href={`${is_https ? 'https' : 'http'}://${baseURL}:${app_port}`} target="_blank" className="me-2">
+                                                    {`${is_https ? 'https' : 'http'}://${baseURL}:${app_port}`}
                                                 </a>
                                             </div>
                                             {
                                                 env.W9_ADMIN_PATH && (
                                                     <div>
                                                         <label className="me-2 fs-5">{_("Backend")}:</label>
-                                                        <a href={`${baseURL}:${app_port}${env?.W9_ADMIN_PATH}`} target="_blank" className="me-2">
-                                                            {`${baseURL}:${app_port}${env?.W9_ADMIN_PATH}`}
+                                                        <a href={`${is_https ? 'https' : 'http'}://${baseURL}:${app_port}${env?.W9_ADMIN_PATH}`} target="_blank" className="me-2">
+                                                            {`${is_https ? 'https' : 'http'}://${baseURL}:${app_port}${env?.W9_ADMIN_PATH}`}
                                                         </a>
                                                     </div>
                                                 )
