@@ -56,6 +56,14 @@ cockpit.locale({
         null,
         "所有状态"
     ],
+    "State": [
+        null,
+        "状态"
+    ],
+    "Status": [
+        null,
+        "状态详情"
+    ],
     "Domain": [
         null,
         "域名"

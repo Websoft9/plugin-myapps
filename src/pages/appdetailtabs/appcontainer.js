@@ -43,6 +43,7 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                 <tr>
                                     <th>{_("Name")}</th>
                                     <th>{_("State")}</th>
+                                    <th>{_("Status")}</th>
                                     <th style={{ textAlign: 'center' }}>{_("Actions")}</th>
                                     <th>{_("Image")}</th>
                                     <th>{_("Created")}</th>
@@ -59,6 +60,9 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                                 <Badge className={`${container.State === 'running' ? 'bg-success' : container.State === 'exited' ? 'bg-danger' : 'info'}`}>
                                                     {container.State}
                                                 </Badge>
+                                            </td>
+                                            <td>
+                                                {container.Status}
                                             </td>
                                             <td style={{ textAlign: 'center' }}>
                                                 <a href="#" onClick={(e) => {

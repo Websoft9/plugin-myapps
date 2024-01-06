@@ -38,15 +38,15 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
     const [isExpandedForNoDomain, setIsExpandedForNoDomain] = React.useState(true);//用于保存“无域名访问”的折叠状态
     //const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(false);//用于保存“初始账号”的折叠状态
     //const baseURL = `${window.location.protocol}//${window.location.hostname}`;
-    const baseURL = `${window.location.hostname}`;
+    const baseURL = `${window.location.hostname}`; //获取当前主机名
 
     let domains = props?.data?.domain_names;
     domains = [...domains].sort((a, b) => a.id - b.id);
-    const env = props?.data?.env;
-    const app_port = props?.data?.env?.W9_HTTP_PORT_SET || props?.data?.env?.W9_HTTPS_PORT_SET
+    const env = props?.data?.env; //获取env环境变量
+    const app_port = props?.data?.env?.W9_HTTP_PORT_SET || props?.data?.env?.W9_HTTPS_PORT_SET //获取应用端口
     const is_https = !!props?.data?.env?.W9_HTTPS_PORT_SET; //判断是否是https应用
     const is_web_app = !!props?.data?.env?.W9_URL; //判断是否是web应用
-    const w9_url = props?.data?.env?.W9_URL;
+    const w9_url = props?.data?.env?.W9_URL; //获取w9_url
 
     const [isExpandedForAccount, setIsExpandedForAccount] = React.useState(!is_web_app ? true : false);
 
