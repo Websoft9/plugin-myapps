@@ -4,10 +4,6 @@ cockpit.locale({
         "language": "zh_CN",
         "language-direction": "ltr"
     },
-    "App Store": [
-        null,
-        "应用商店"
-    ],
     "My Apps": [
         null,
         "我的应用"
@@ -23,10 +19,6 @@ cockpit.locale({
     "Version": [
         null,
         "版本"
-    ],
-    "Requires at least": [
-        null,
-        "最低配置要求"
     ],
     "Name": [
         null,
@@ -87,14 +79,6 @@ cockpit.locale({
     "Updates": [
         null,
         "更新"
-    ],
-    "Please enter a custom application name between 2 and 20 characters.": [
-        null,
-        "请输入一个2-20位的自定义应用名称."
-    ],
-    "Only letters and numbers from 2 to 20 are allowed. No special characters.": [
-        null,
-        "只允许使用2-20位的字母和数字,不允许使用特殊字符."
     ],
     "Start App": [
         null,
@@ -248,7 +232,7 @@ cockpit.locale({
         null,
         "保存中..."
     ],
-    "Portainer": [
+    "Containers": [
         null,
         "容器"
     ],
@@ -256,9 +240,9 @@ cockpit.locale({
         null,
         "容器"
     ],
-    "Nginx": [
+    "Gateway": [
         null,
-        "域名"
+        "网关"
     ],
     "BackUp": [
         null,
@@ -404,7 +388,7 @@ cockpit.locale({
         null,
         "重建应用"
     ],
-    "Gitea": [
+    "Git": [
         null,
         "仓库"
     ],
