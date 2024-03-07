@@ -1,3 +1,5 @@
+## 0.1.7 release on 2024-03-07
+1. fix W9_LOGIN changes
 ## 0.1.6 release on 2024-02-27
 1. fix W9_LOGIN changes
 ## 0.1.5 release on 2024-01-06
