@@ -1,1 +1,1 @@
-1. fix W9_LOGIN changes
+1. Message prompt for modifying application installation restrictions
