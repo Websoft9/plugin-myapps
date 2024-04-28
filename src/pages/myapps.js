@@ -25,6 +25,10 @@ const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
+function HtmlContent({ html }) {
+    return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 //应用状态为error时，显示错误消息
 const ErrorInfoModal = (props): React$Element<React$FragmentType> => {
     return (
@@ -112,7 +116,13 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                         }
                         catch (error) {
                             setShowAlert(true);
-                            setAlertMessage(error.message);
+                            // setAlertMessage(error.message);
+                            if (error.message == "Exceed the maximum number of apps") {
+                                setAlertMessage(_("The number of applications running exceeds the free version limit.Please <a target='_blank' href='https://www.websoft9.com/pricing'>upgrade</a> to the commercial version."));
+                            }
+                            else {
+                                setAlertMessage(error.message);
+                            }
                         }
                         finally {
                             setDisable(false);
@@ -129,7 +139,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                 showAlert &&
                 <Snackbar open={showAlert} onClose={handleClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
                     <MyMuiAlert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-                        {alertMessage}
+                        <HtmlContent html={alertMessage} />
                     </MyMuiAlert>
                 </Snackbar>
             }
