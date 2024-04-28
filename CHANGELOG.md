@@ -1,3 +1,5 @@
+## 0.1.8-rc1 release on 2024-04-28
+1. Message prompt for modifying application installation restrictions
 ## 0.1.7-rc1 release on 2024-03-26
 1. fix W9_LOGIN changes
 ## 0.1.7 release on 2024-03-07
