@@ -19,7 +19,7 @@ const DefaultImg = language === "zh_CN" ? DefaultImgzh : DefaultImgEn;
 
 let protocol = window.location.protocol;
 let host = window.location.host;
-const baseURL = `${window.location.protocol}//${window.location.hostname}`;
+var baseURL = ""
 
 const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -251,6 +251,15 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    const getNginxConfig = async () => {
+        var script = "docker exec -i websoft9-apphub apphub getconfig --section nginx_proxy_manager";
+        let content = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
+        content = JSON.parse(content);
+        let listen_port = content.listen_port;
+
+        baseURL = `${window.location.protocol}//${window.location.hostname}:${listen_port}`;
+    }
+
     const getApps = async () => {
         try {
             const newApps = await Apps();
@@ -301,6 +310,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                await getNginxConfig();
                 await getApps();
                 setLoading(false);
             } catch (error) {

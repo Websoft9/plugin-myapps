@@ -20,6 +20,7 @@ import AppVolume from './appdetailtabs/appvolume';
 const _ = cockpit.gettext;
 const language = cockpit.language;//获取cockpit的当前语言环境
 const DefaultImg = language === "zh_CN" ? DefaultImgzh : DefaultImgEn;
+var baseURL = "";
 
 const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -136,8 +137,14 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [showDBExpose, setShowDBExpose] = useState(false);
     const [showAppVolumes, setShowAppVolumes] = useState(false);
 
+    const getNginxConfig = async () => {
+        var script = "docker exec -i websoft9-apphub apphub getconfig --section nginx_proxy_manager";
+        let content = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
+        content = JSON.parse(content);
+        let listen_port = content.listen_port;
 
-    const baseURL = `${window.location.protocol}//${window.location.hostname}`;
+        baseURL = `${window.location.protocol}//${window.location.hostname}:${listen_port}`;
+    }
 
     let stateResult = '';
     if (currentApp && currentApp.containers) {
@@ -196,6 +203,14 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const cancelredeployApp = () => {
         setShowRedeployConform(false);
     };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            await getNginxConfig();
+        };
+
+        fetchData();
+    }, []);
 
     useEffect(() => {
         setCurrentApp(props.current_app);
