@@ -456,10 +456,10 @@ const MyApps = (): React$Element<React$FragmentType> => {
     return (
         error ? <p>Error : {error} </p> :
             <>
-                <Row className="mb-2 align-items-center">
-                    <Col xs={12} sm={6} md={3} lg={2}>
+                <Row className="align-items-center">
+                    {/* <Col xs={12} sm={6} md={3} lg={2}>
                         <span style={{ fontSize: "28px" }}>{_("My Apps")}</span>
-                    </Col>
+                    </Col> */}
                     <Col xs={12} sm={6} md={3} lg={2}>
                         <FormInput
                             value={selectedStatus}
@@ -476,7 +476,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                             <option value="4">Error</option>
                         </FormInput>
                     </Col>
-                    <Col xs={12} sm={12} md={6} lg={7}>
+                    <Col xs={12} sm={12} md={6} lg={9}>
                         <FormInput
                             type="text"
                             name="search"
@@ -517,7 +517,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                             if (hasOfficialApps) {
                                 return (
                                     <Row>
-                                        <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
+                                        <h4 style={official_app ? { marginTop: '30px', marginBottom: '20px' } : { marginTop: '20px', fontWeight: 'normal', marginBottom: '20px' }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
                                         <div className="d-flex align-items-center justify-content-center" style={{ flexDirection: "column", marginTop: "50px", marginBottom: "50px" }}>
                                             <h4>{_("No Apps Found")}</h4>
                                         </div>
@@ -557,7 +557,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                             return (
                                 <Row>
                                     {/* 根据official_app的值显示不同的标题 */}
-                                    <h4 style={official_app ? {} : { paddingTop: "10px" }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
+                                    <h4 style={official_app ? { marginTop: '30px', marginBottom: '20px' } : { marginTop: '20px', fontWeight: 'normal', marginBottom: '20px' }}>{official_app ? _("Websoft9's Apps") : _("Other Apps")}</h4>
                                     {filteredApps.map((app, i) => {
                                         return (
                                             <Col xxl={2} md={3} key={app.app_id} className="appstore-item">
@@ -647,7 +647,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                 }
                 {
                     showModal && selectedApp && selectedApp.status === 1 &&
-                    <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} />
+                    <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} baseURL={baseURL} />
                 }
                 {
                     showRemoveConform && selectedApp && (selectedApp.status === 4 || selectedApp.status === 2) &&
