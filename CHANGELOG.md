@@ -1,3 +1,5 @@
+## 0.2.0 release on 2024-05-24
+1. Message prompt for modifying application installation restrictions
 ## 0.2.0-rc2 release on 2024-05-23
 1. Message prompt for modifying application installation restrictions
 ## 0.2.0-rc1 release on 2024-05-23
