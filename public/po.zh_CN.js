@@ -472,7 +472,7 @@ cockpit.locale({
         null,
         "Websoft9的应用采用云原生架构中流行的GitOps模式，将应用的编排源码化并存储在Git仓库中。"
     ],
-    "Prompt Adjustment": [
+    "Go to Edit Repository": [
         null,
         "马上修改"
     ],

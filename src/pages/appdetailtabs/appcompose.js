@@ -207,7 +207,7 @@ const AppCompose = (props): React$Element<React$FragmentType> => {
                                                                 }
                                                             }}
                                                         >
-                                                            {index === steps.length - 1 ? _("Redeploy App") : _("Prompt Adjustment")}
+                                                            {index === steps.length - 1 ? _("Redeploy App") : _("Go to Edit Repository")}
                                                         </Button>
                                                         <Button
                                                             variant="link"
