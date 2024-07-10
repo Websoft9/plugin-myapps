@@ -490,7 +490,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
                                             {_("Documentation")}
                                         </Tooltip>
                                     }>
-                                    <a href={`https://support.websoft9.com/${language === "zh_CN" ? '' : 'en/'}docs/${currentApp?.app_name || ''}`}
+                                    <a href={`https://support.websoft9.com/${language === "zh_CN" ? '' : 'en/'}docs/next/${currentApp?.app_name || ''}`}
                                         style={{ color: "#fff", backgroundColor: "#727cf5", padding: "5px 10px", borderRadius: "3px", borderColor: "#727cf5", marginRight: "10px" }}
                                         target="_blank">
                                         <i className="dripicons-document noti-icon"></i>{' '}
