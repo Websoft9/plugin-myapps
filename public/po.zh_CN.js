@@ -730,11 +730,11 @@ cockpit.locale({
     ],
     "W9_LOGIN_GET_Credential": [
         null,
-        "获取密码方法"
+        "管理员密码获取方法"
     ],
     "W9_LOGIN_SHOW_PASSWORD": [
         null,
-        "展示登陆密码方法"
+        "管理员密码获取方法"
     ],
     "W9_UDP_PORT_SET": [
         null,
@@ -875,5 +875,9 @@ cockpit.locale({
     "W9_LOGIN_ConnectURL": [
         null,
         "登陆连接地址"
+    ],
+    "W9_BROKER_PORT_SET": [
+        null,
+        "代理监听端口"
     ]
 });
