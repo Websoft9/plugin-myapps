@@ -28,6 +28,10 @@ cockpit.locale({
         null,
         "名称"
     ],
+    "Type": [
+        null,
+        "类型"
+    ],
     "Close": [
         null,
         "关闭"
@@ -459,6 +463,10 @@ cockpit.locale({
     "Mount point": [
         null,
         "挂载点"
+    ],
+    "Your user does not have Docker permissions. Grant Docker permissions to this user by command: sudo usermod -aG docker <username>": [
+        null,
+        "您的用户没有Docker权限。通过命令授予此用户Docker权限：sudo usermod-aG Docker<username>"
     ],
     "Rebuild the application after orchestrating it on-demand. Suitable for users familiar with Docker.": [
         null,

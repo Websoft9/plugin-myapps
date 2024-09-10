@@ -104,7 +104,7 @@ const AppDatabases = (props): React$Element<React$FragmentType> => {
                             <Table className="mb-0">
                                 <thead>
                                     <tr>
-                                        <th>{_("Name")}</th>
+                                        <th>{_("Type")}</th>
                                         <th>{_("Intranet Host")}</th>
                                         <th>{_("Initial Account")}</th>
                                         <th>{_("Password")}</th>
