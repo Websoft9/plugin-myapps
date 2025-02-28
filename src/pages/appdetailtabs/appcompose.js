@@ -8,15 +8,14 @@ import Stepper from '@mui/material/Stepper';
 import Typography from '@mui/material/Typography';
 import classNames from 'classnames';
 import cockpit from "cockpit";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 import Spinner from '../../components/Spinner';
 import { RedeployApp } from '../../helpers';
+import { getApiKey, getNginxConfig } from '../../helpers/api_apphub/apiCore_axios';
 
 const _ = cockpit.gettext;
-
-
 
 const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -31,12 +30,46 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
     const [pullImage, setPullImage] = useState(false); //重建时是否重新拉取镜像
     const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
 
+    const [logs, setLogs] = useState([]);
+    const [isRedeploying, setIsRedeploying] = useState(false); // 新增部署状态
+
+    const getRequestConfig = async () => {
+        try {
+            const [apiKey, port] = await Promise.all([
+                getApiKey(),  // 直接使用外部导入的方法
+                getNginxConfig() // 直接使用外部导入的方法
+            ]);
+
+            return {
+                baseURL: `${window.location.protocol}//${window.location.hostname}:${port}/api`,
+                headers: {
+                    'x-api-key': apiKey,
+                    'Accept': 'application/json'
+                }
+            };
+        } catch (error) {
+            setShowAlert(true);
+            setAlertMessage(error.message);
+            throw error;
+        }
+    };
+
     function closeAllModals() {
         //关闭所有弹窗
         // props.onClose();
         // props.onDataChange();
         window.location.reload(true);
     }
+    useEffect(() => {
+        scrollToBottom();
+    }, [logs]);
+
+    const scrollToBottom = () => {
+        const logContainer = document.getElementById('log-container');
+        if (logContainer) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    };
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -45,6 +78,95 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
         setShowAlert(false);
         setAlertMessage("");
     };
+
+    const handleRedeploy = async () => {
+        setIsRedeploying(true);
+        setDisable(true);
+        setShowCloseButton(false);
+        setLogs([]);
+        // props.disabledButton();
+
+        try {
+            const { baseURL, headers } = await getRequestConfig();
+            const params = new URLSearchParams({
+                pullImage: pullImage
+            });
+            const response = await fetch(`${baseURL}/apps/${props.app.app_id}/redeploy?${params}`, {
+                method: 'PUT',
+                headers: headers
+            });
+
+            if (!response.ok) throw new Error(response.statusText);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let success = false;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try {
+                        const logEntry = JSON.parse(line);
+                        setLogs(prev => [...prev, logEntry]);
+
+                        if (logEntry.type === 'error') {
+                            setAlertMessage(logEntry.message);
+                            setShowAlert(true);
+                        }
+
+                        if (logEntry.status === 'success') {
+                            success = true;
+                            setTimeout(closeAllModals, 1000);
+                        }
+                    } catch (e) {
+                        setLogs(prev => [...prev, {
+                            timestamp: new Date().toISOString(),
+                            type: 'parse_error',
+                            data: line
+                        }]);
+                    }
+                }
+
+                if (done) {
+                    if (buffer.trim()) {
+                        try {
+                            const logEntry = JSON.parse(buffer);
+                            setLogs(prev => [...prev, logEntry]);
+                            if (logEntry.status === 'success') {
+                                success = true;
+                                setTimeout(closeAllModals, 1000);
+                            }
+                        } catch (e) {
+                            setLogs(prev => [...prev, {
+                                timestamp: new Date().toISOString(),
+                                type: 'parse_error',
+                                data: buffer
+                            }]);
+                        }
+                    }
+                    if (!success) {
+                        setShowAlert(true);
+                        setAlertMessage(_("Redeployment failed unexpectedly"));
+                    }
+                    break;
+                }
+            }
+        } catch (error) {
+            setIsRedeploying(false); // 出错时重置状态
+            setShowAlert(true);
+            setAlertMessage(error.message);
+        } finally {
+            setDisable(false);
+            setShowCloseButton(true);
+            props.enableButton();
+        }
+    }
 
     return (
         <>
@@ -66,6 +188,60 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                             />
                         </Form>
                     </div>
+                    {/* 新增日志显示区域 */}
+                    {isRedeploying && (
+                        <div id="log-container" style={{
+                            height: '200px',
+                            overflowY: 'auto',
+                            backgroundColor: '#000',
+                            color: '#fff',
+                            padding: '10px',
+                            marginTop: '10px',
+                            fontFamily: 'monospace',
+                            borderRadius: '4px'
+                        }}>
+                            {/* {logs.map((log, index) => (
+                                <div key={index} style={{
+                                    color: log.type === 'error' ? '#ff4444' : '#fff',
+                                    whiteSpace: 'pre-wrap',
+                                    lineHeight: '1.5',
+                                    fontSize: '0.9em'
+                                }}>
+                                    {log.timestamp && `[${new Date(log.timestamp).toLocaleTimeString()}] `}
+                                    {log.data || log.message}
+                                </div>
+                            ))} */}
+                            {logs.map((log, index) => {
+                                // 新增数据格式化方法
+                                const formatLogData = (data) => {
+                                    if (typeof data === 'object' && data !== null) {
+                                        // 处理镜像拉取信息
+                                        if (data.status && data.id) {
+                                            return `${data.status}: ${data.id}`;
+                                        }
+                                        if (data.status) {
+                                            return data.status;
+                                        }
+                                        // 保底处理复杂对象
+                                        return JSON.stringify(data, null, 2);
+                                    }
+                                    return data;
+                                };
+
+                                return (
+                                    <div key={index} style={{
+                                        color: log.type === 'error' ? '#ff4444' : '#fff',
+                                        whiteSpace: 'pre-wrap',
+                                        lineHeight: '1.5',
+                                        fontSize: '0.9em'
+                                    }}>
+                                        {log.timestamp && `[${new Date(log.timestamp).toLocaleTimeString()}] `}
+                                        {formatLogData(log.data) || log.message}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </Modal.Body>
                 <Modal.Footer>
                     {
@@ -79,24 +255,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
                         )
                     }
                     {" "}
-                    <Button disabled={disable} variant="warning" onClick={async () => {
-                        setDisable(true);
-                        setShowCloseButton(false);
-                        try {
-                            await RedeployApp(props.app.app_id, { pullImage: pullImage });
-                            closeAllModals();
-                        }
-                        catch (error) {
-                            setAlertType("error");
-                            setShowAlert(true);
-                            setAlertMessage(error.message);
-                        }
-                        finally {
-                            setDisable(false);
-                            setShowCloseButton(true);
-                        }
-                    }
-                    }>
+                    <Button disabled={disable} variant="warning" onClick={handleRedeploy}>
                         {disable && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />} {_("Redeploy")}
                     </Button>
                 </Modal.Footer>
@@ -123,6 +282,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
         </>
     );
 }
+
 
 const steps = [
     {

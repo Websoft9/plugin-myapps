@@ -29,6 +29,47 @@ function HtmlContent({ html }) {
     return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+// 格式化日志内容
+const formatLog = (log) => {
+    if (typeof log === 'string') {
+        return log;
+    } else if (typeof log === 'object') {
+        return `${log.status} ${log.progress || ''} ${log.id || ''}`.trim();
+    }
+    return '';
+}
+
+// 日志显示弹窗
+const InstallingLogModal = (props): React$Element<React$FragmentType> => {
+    return (
+        <Modal show={props.showConform} onHide={props.onClose} size="lg" scrollable="true" backdrop="static">
+            <Modal.Header onHide={props.onClose} closeButton className={classNames('modal-colored-header', 'bg-info')}>
+                <h4>{_("Installing Log for")} {props.app.app_id}</h4>
+            </Modal.Header>
+            <Modal.Body className="row">
+                {/* <pre>{JSON.stringify(props.logs, null, 2)}</pre> */}
+                {props.logs.map((stage, index) => (
+                    stage.sub_logs && stage.sub_logs.length > 0 && (
+                        <div key={index} style={{ marginBottom: '20px' }}>
+                            <h5>{stage.title}</h5>
+                            {stage.sub_logs.filter(log => log).map((log, subIndex) => (
+                                <div key={subIndex} style={{ whiteSpace: 'pre-wrap', marginBottom: '10px', padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+                                    {formatLog(log)}
+                                </div>
+                            ))}
+                        </div>
+                    )
+                ))}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="light" onClick={props.onClose}>
+                    {_("Close")}
+                </Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
 //应用状态为error时，显示错误消息
 const ErrorInfoModal = (props): React$Element<React$FragmentType> => {
     return (
@@ -245,6 +286,9 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const [deleteType, setDeleteType] = useState("");//用于存储删除应用的类型：error\inactive
     const [showErrorInfo, setShowErrorInfo] = useState(false); //用于显示状态为failed时显示错误消息的弹窗
 
+    const [installingLog, setInstallingLog] = useState(""); // 用于存储安装日志
+    const [showInstallingLog, setShowInstallingLog] = useState(false); // 用于显示安装日志弹窗的标识    
+
     const selectedAppRef = useRef(selectedApp);
     const navigate = useNavigate(); //用于页面跳转
 
@@ -301,6 +345,12 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     (app) => app.app_id === selectedAppRef.current.app_id
                 );
                 setSelectedApp(updatedApp);
+            }
+
+            // 获取安装日志
+            const installingApp = sortedApps.find(app => app.status === 3);
+            if (installingApp) {
+                setInstallingLog(installingApp.logs || "");
             }
 
             setLoading(false);
@@ -385,6 +435,10 @@ const MyApps = (): React$Element<React$FragmentType> => {
         if (app.status === 1) {
             setSelectedApp(app);
             setShowModal(true);
+        }
+        else if (app.status === 3) {
+            setSelectedApp(app);
+            setShowInstallingLog(true);
         }
     };
 
@@ -643,6 +697,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                                                                     (
                                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                             {app.status === 3 && <Spinner className="spinner-border-sm m-2" />}
+
                                                                             {" "}
                                                                             <div className="m-2">
                                                                                 <Badge className={getStatusBadgeClass(app.status)}>
@@ -658,6 +713,8 @@ const MyApps = (): React$Element<React$FragmentType> => {
                                                                                         })()
                                                                                     }
                                                                                 </Badge>
+                                                                                {" "}
+                                                                                {/* {app.status === 3 && <i className="dripicons-document noti-icon" title={_('Logs')} onClick={(e) => { e.stopPropagation(); setSelectedApp(app); setShowInstallingLog(true); }}></i>} */}
                                                                             </div>
                                                                         </div>
                                                                     ) :
@@ -692,6 +749,10 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     {
                         showErrorInfo && selectedApp && selectedApp.status === 4 &&
                         <ErrorInfoModal showConform={showErrorInfo} onClose={cancelShowError} app={selectedApp} />
+                    }
+                    {
+                        showInstallingLog && selectedApp && selectedApp.status === 3 &&
+                        <InstallingLogModal showConform={showInstallingLog} onClose={() => setShowInstallingLog(false)} app={selectedApp} logs={installingLog} />
                     }
                     {
                         showAlert &&
