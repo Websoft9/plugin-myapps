@@ -41,6 +41,7 @@ const formatLog = (log) => {
 
 // 日志显示弹窗
 const InstallingLogModal = (props): React$Element<React$FragmentType> => {
+    const logs = props.app.logs || [];
     return (
         <Modal show={props.showConform} onHide={props.onClose} size="lg" scrollable="true" backdrop="static">
             <Modal.Header onHide={props.onClose} closeButton className={classNames('modal-colored-header', 'bg-info')}>
@@ -48,7 +49,7 @@ const InstallingLogModal = (props): React$Element<React$FragmentType> => {
             </Modal.Header>
             <Modal.Body className="row">
                 {/* <pre>{JSON.stringify(props.logs, null, 2)}</pre> */}
-                {props.logs.map((stage, index) => (
+                {logs.map((stage, index) => (
                     stage.sub_logs && stage.sub_logs.length > 0 && (
                         <div key={index} style={{ marginBottom: '20px' }}>
                             <h5>{stage.title}</h5>
@@ -345,12 +346,11 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     (app) => app.app_id === selectedAppRef.current.app_id
                 );
                 setSelectedApp(updatedApp);
-            }
 
-            // 获取安装日志
-            const installingApp = sortedApps.find(app => app.status === 3);
-            if (installingApp) {
-                setInstallingLog(installingApp.logs || "");
+                // // 获取安装日志
+                // if (updatedApp && updatedApp.status === 3) {
+                //     setInstallingLog(updatedApp.logs || "");
+                // }
             }
 
             setLoading(false);
@@ -752,7 +752,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     }
                     {
                         showInstallingLog && selectedApp && selectedApp.status === 3 &&
-                        <InstallingLogModal showConform={showInstallingLog} onClose={() => setShowInstallingLog(false)} app={selectedApp} logs={installingLog} />
+                        <InstallingLogModal showConform={showInstallingLog} onClose={() => setShowInstallingLog(false)} app={selectedApp} /*logs={installingLog}*/ />
                     }
                     {
                         showAlert &&
