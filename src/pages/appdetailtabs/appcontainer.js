@@ -117,12 +117,15 @@ const AppContainer = (props): React$Element<React$FragmentType> => {
                                             </td>
                                             <td>{new Date(container.Created * 1000).toLocaleString()}</td>
                                             {/* <td>{container.NetworkSettings.Networks[container.HostConfig.NetworkMode].IPAddress}</td> */}
-                                            <td>{container.NetworkSettings.Networks["websoft9"].IPAddress}</td>
-                                            <td>{container.Ports.filter(port => port.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP))
-                                                .sort((a, b) => a.PublicPort - b.PublicPort)
-                                                .map((port, index) =>
-                                                    `${port.PublicPort}:${port.PrivatePort}`
-                                                ).join(', ')}
+                                            <td>{container?.NetworkSettings?.Networks?.["websoft9"]?.IPAddress || ''}</td>
+                                            <td>
+                                                {container?.Ports?.filter(port =>
+                                                    port?.IP && /^(\d{1,3}\.){3}\d{1,3}$/.test(port.IP)
+                                                )?.sort((a, b) =>
+                                                    (a?.PublicPort || 0) - (b?.PublicPort || 0)
+                                                )?.map(port =>
+                                                    `${port?.PublicPort || ''}:${port?.PrivatePort || ''}`
+                                                ).filter(Boolean).join(', ') || ''}
                                             </td>
 
 
