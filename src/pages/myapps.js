@@ -289,6 +289,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
     const [installingLog, setInstallingLog] = useState(""); // 用于存储安装日志
     const [showInstallingLog, setShowInstallingLog] = useState(false); // 用于显示安装日志弹窗的标识    
+    const [phpApps, setPhpApps] = useState([]); // 用于存储支持PHP的应用列表
 
     const selectedAppRef = useRef(selectedApp);
     const navigate = useNavigate(); //用于页面跳转
@@ -304,6 +305,18 @@ const MyApps = (): React$Element<React$FragmentType> => {
             let listen_port = content.listen_port;
 
             baseURL = `${window.location.protocol}//${window.location.hostname}:${listen_port}`;
+
+            // 获取PHP应用配置
+            try {
+                var phpScript = "docker exec -i websoft9-apphub apphub getconfig --section php_apps";
+                let phpContent = (await cockpit.spawn(["/bin/bash", "-c", phpScript], { superuser: "try" })).trim();
+                phpContent = JSON.parse(phpContent);
+                const apps = phpContent.keys ? phpContent.keys.split(',').map(app => app.trim()) : [];
+                setPhpApps(apps);
+            } catch (phpError) {
+                console.error('Failed to get PHP apps config:', phpError);
+                setPhpApps([]);
+            }
         }
         catch (error) {
             const errorText = [error.problem, error.reason, error.message]
@@ -736,7 +749,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     }
                     {
                         showModal && selectedApp && selectedApp.status === 1 &&
-                        <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} baseURL={baseURL} />
+                        <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} baseURL={baseURL} isPhpApp={phpApps.includes(selectedApp.app_name)} />
                     }
                     {
                         showRemoveConform && selectedApp && (selectedApp.status === 4 || selectedApp.status === 2) &&

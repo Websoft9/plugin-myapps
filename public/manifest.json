@@ -7,5 +7,5 @@
       "order": 0
     }
   },
-  "content-security-policy": "default-src 'unsafe-inline' 'unsafe-eval' *;font-src * data:;style-src 'unsafe-inline' 'unsafe-eval' *;img-src * data:;connect-src http://redhattext http://overpass-webfont *"
+  "content-security-policy": "default-src 'unsafe-inline' 'unsafe-eval' *;font-src * data:;style-src 'unsafe-inline' 'unsafe-eval' *;img-src * data:;connect-src http://redhattext http://overpass-webfont https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=9393241f-05b6-45a2-a3e7-b3ab5275cf09 *"
 }

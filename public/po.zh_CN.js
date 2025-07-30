@@ -947,5 +947,162 @@ cockpit.locale({
     "W9_DNS_UDP_PORT_SET": [
         null,
         "DNS UDP 端口"
+    ],
+    "PHP Overview": [
+        null,
+        "PHP 概览"
+    ],
+    "Current PHP Version": [
+        null,
+        "当前PHP版本"
+    ],
+    "Installed PHP Modules": [
+        null,
+        "已安装的PHP模块"
+    ],
+    "Switch PHP Version": [
+        null,
+        "切换PHP版本"
+    ],
+    "Switching PHP versions may cause compatibility issues with your application. Please contact support for assistance.": [
+        null,
+        "切换PHP版本可能会导致应用程序兼容性问题。请联系支持以获取帮助。"
+    ],
+    "Contact Support": [
+        null,
+        "联系支持"
+    ],
+    "Loading...": [
+        null,
+        "加载中..."
+    ],
+    "Cancel": [
+        null,
+        "取消"
+    ],
+    "Request Migration": [
+        null,
+        "版本切换"
+    ],
+    "PHP version migration requires technical assistance to ensure compatibility": [
+        null,
+        "PHP版本切换需要技术支持以确保兼容性"
+    ],
+    "Warning:": [
+        null,
+        "警告："
+    ],
+    "Target Version": [
+        null,
+        "目标版本"
+    ],
+    "Select Version": [
+        null,
+        "选择版本"
+    ],
+    "Contact Name": [
+        null,
+        "联系人姓名"
+    ],
+    "Enter contact name": [
+        null,
+        "请输入联系人姓名"
+    ],
+    "Phone Number": [
+        null,
+        "手机号码"
+    ],
+    "Phone number": [
+        null,
+        "手机号码"
+    ],
+    "Email Address": [
+        null,
+        "电子邮箱"
+    ],
+    "Email address": [
+        null,
+        "电子邮箱"
+    ],
+    "Remarks": [
+        null,
+        "备注说明"
+    ],
+    "Other remarks and explanations": [
+        null,
+        "其他备注说明"
+    ],
+    "Contact info: Phone or email required": [
+        null,
+        "联系方式：手机号或邮箱至少填写一项"
+    ],
+    "Get Support": [
+        null,
+        "获取支持"
+    ],
+    "Please enter contact name": [
+        null,
+        "请输入联系人姓名"
+    ],
+    "Please enter at least one contact method (phone or email)": [
+        null,
+        "请至少填写一种联系方式（手机号或邮箱）"
+    ],
+    "Please enter a valid phone number": [
+        null,
+        "请输入有效的手机号码"
+    ],
+    "Please enter a valid email address": [
+        null,
+        "请输入有效的电子邮箱地址"
+    ],
+    "Please select target PHP version": [
+        null,
+        "请选择目标PHP版本"
+    ],
+    "PHP version change request submitted successfully! We will contact you soon.": [
+        null,
+        "PHP版本切换申请提交成功！我们将尽快与您联系。"
+    ],
+    "Error fetching version": [
+        null,
+        "获取版本信息失败"
+    ],
+    "Error fetching modules": [
+        null,
+        "获取模块信息失败"
+    ],
+    "Cancel Switch": [
+        null,
+        "取消切换"
+    ],
+    "Please include your contact information in the remarks and ensure it is accurate so we can reach you.": [
+        null,
+        "请在备注中包含您的联系信息，并确保其准确无误，以便我们能够联系到您。"
+    ],
+    "Note": [
+        null,
+        "注意"
+    ],
+    "Example": [
+        null,
+        "例如"
+    ],
+    "Please provide contact information and remarks": [
+        null,
+        "请输入联系信息和备注说明"
+    ],
+    "Please provide at least phone number or email address in remarks": [
+        null,
+        "请至少填写一种联系方式（手机号或邮箱）"
+    ],
+    "Request submitted successfully": [
+        null,
+        "申请提交成功"
+    ],
+    "Request submission failed": [
+        null,
+        "申请提交失败"
     ]
 });
+

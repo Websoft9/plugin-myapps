@@ -14,6 +14,7 @@ import AppCompose from './appdetailtabs/appcompose';
 import AppContainer from './appdetailtabs/appcontainer';
 import AppDatabases from './appdetailtabs/appdatabases';
 import AppOverview from './appdetailtabs/appoverview';
+import AppPhpVersion from './appdetailtabs/appphpversion';
 import Uninstall from './appdetailtabs/appuninstall';
 import AppVolume from './appdetailtabs/appvolume';
 import { getApiKey, getNginxConfig } from '../helpers/api_apphub/apiCore_axios';
@@ -297,16 +298,6 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [showDBExpose, setShowDBExpose] = useState(false);
     const [showAppVolumes, setShowAppVolumes] = useState(false);
     const baseURL = props.baseURL;
-
-    // const getNginxConfig = async () => {
-    //     var script = "docker exec -i websoft9-apphub apphub getconfig --section nginx_proxy_manager";
-    //     let content = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
-    //     content = JSON.parse(content);
-    //     let listen_port = content.listen_port;
-
-    //     baseURL = `${window.location.protocol}//${window.location.hostname}:${listen_port}`;
-    // }
-
     let stateResult = '';
     if (currentApp && currentApp.containers) {
         // 计算每个容器状态的数量
@@ -452,9 +443,17 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             text: <AppVolume data={currentApp} />,
         });
     }
-    if (showDBExpose) {
+    if (currentApp && props.isPhpApp) {
         tabContents.splice(4, 0, {
             id: '7',
+            title: _("PHP"),
+            icon: 'mdi dripicons-stack',
+            text: <AppPhpVersion data={currentApp} />,
+        });
+    }
+    if (showDBExpose) {
+        tabContents.splice(4, 0, {
+            id: '8',
             title: _("Database"),
             icon: 'mdi dripicons-stack',
             text: <AppDatabases data={currentApp} />,
