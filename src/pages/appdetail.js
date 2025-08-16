@@ -17,7 +17,8 @@ import AppOverview from './appdetailtabs/appoverview';
 import AppPhpVersion from './appdetailtabs/appphpversion';
 import Uninstall from './appdetailtabs/appuninstall';
 import AppVolume from './appdetailtabs/appvolume';
-import { getApiKey, getNginxConfig } from '../helpers/api_apphub/apiCore_axios';
+import AppMonitor from './appdetailtabs/appmonitor';
+import { getApiKey, getNginxConfig } from '../helpers/api_apphub/apiCore';
 
 const _ = cockpit.gettext;
 const language = cockpit.language;//获取cockpit的当前语言环境
@@ -29,7 +30,7 @@ const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
 });
 
 //重建应用弹窗
-const RedeployAppConform = (props): React$Element<React$FragmentType> => {
+const RedeployAppConform = (props) => {
     const navigate = useNavigate(); //用于页面跳转
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
@@ -276,7 +277,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
     );
 }
 
-const AppDetailModal = (props): React$Element<React$FragmentType> => {
+const AppDetailModal = (props) => {
     const [restartDisable, setRestartDisable] = useState(false);//用于重启按钮的按钮禁用
     const [startDisable, setStartDisable] = useState(false); //用于启动按钮禁用
     const [stopDisable, setStopDisable] = useState(false); //用于停止按钮禁用
@@ -297,6 +298,7 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
     const [showAccess, setShowAccess] = useState(false);
     const [showDBExpose, setShowDBExpose] = useState(false);
     const [showAppVolumes, setShowAppVolumes] = useState(false);
+    const [dataRefreshKey, setDataRefreshKey] = useState(0); //用于触发监控组件数据刷新
     const baseURL = props.baseURL;
     let stateResult = '';
     if (currentApp && currentApp.containers) {
@@ -349,6 +351,16 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         setStopDisable(false);
         setRestartDisable(false);
         setRedeployDisable(false);
+    };
+
+    // 数据变更处理函数，同时触发监控组件刷新
+    const handleDataChange = (...args) => {
+        // 调用原始的 onDataChange
+        if (props.onDataChange) {
+            props.onDataChange(...args);
+        }
+        // 触发监控组件数据刷新
+        setDataRefreshKey(prev => prev + 1);
     };
 
     //用于关闭重建应用的弹窗
@@ -424,15 +436,15 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
             text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}
-                onDataChange={props.onDataChange} onCloseFatherModal={props.onClose} />,
-        },
+                onDataChange={props.onDataChange} onCloseFatherModal={props.onClose} isMonitorApp={props.isMonitorApp} />,
+        }
     ];
     if (showAccess) {
         tabContents.splice(1, 0, {
             id: '5',
             title: _("Access"),
             icon: 'mdi dripicons-stack',
-            text: <AppAccess data={currentApp} onDataChange={props.onDataChange} />,
+            text: <AppAccess data={currentApp} onDataChange={handleDataChange} isMonitorApp={props.isMonitorApp} />,
         });
     }
     if (showAppVolumes) {
@@ -452,11 +464,20 @@ const AppDetailModal = (props): React$Element<React$FragmentType> => {
         });
     }
     if (showDBExpose) {
-        tabContents.splice(4, 0, {
+        tabContents.splice(5, 0, {
             id: '8',
             title: _("Database"),
             icon: 'mdi dripicons-stack',
             text: <AppDatabases data={currentApp} />,
+        });
+    }
+    if (currentApp && props.isMonitorApp) {
+        tabContents.splice(6, 0, {
+            id: '9',
+            title: _("Monitor"),
+            icon: 'mdi mdi-chart-line',
+            text: <AppMonitor data={currentApp} app_id={app_id} setMainContainerId={setMainContainerId}
+                mainContainerId={mainContainerId} setContainersInfo={setContainersInfo} containersInfo={containersInfo} baseURL={baseURL} dataRefreshKey={dataRefreshKey} />,
         });
     }
 

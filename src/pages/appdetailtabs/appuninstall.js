@@ -7,6 +7,7 @@ import { Button, Col, Form, Modal, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../../components/Spinner';
 import { UninstallApp } from '../../helpers';
+import { checkAndDisableMonitoring } from '../../utils/monitorUtils';
 
 const _ = cockpit.gettext;
 
@@ -75,8 +76,14 @@ const UninstallConform = (props) => {
                         setDisable(true);
                         setShowCloseButton(false);
                         props.disableButton();
-                        //调用卸载应用接口
+
                         try {
+                            // 首先检查并禁用监控（如果启用了的话）
+                            if (props.isMonitorApp) {
+                                await checkAndDisableMonitoring(props.app.app_id);
+                            }
+
+                            // 然后执行应用卸载
                             await UninstallApp(props.app.app_id, { purge_data: purgeData });
                             closeAllModals();
                         }
@@ -109,7 +116,7 @@ const UninstallConform = (props) => {
 }
 
 //卸载应用选项卡
-const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => {
+const Uninstall = forwardRef((props, ref) => {
     const [showUninstallConform, setShowUninstallConform] = useState(false);//用于确认卸载弹窗的标识
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const navigate = useNavigate(); //用于页面跳转
@@ -208,7 +215,8 @@ const Uninstall = forwardRef((props, ref): React$Element<React$FragmentType> => 
             </Row>
             {showUninstallConform && <UninstallConform showConform={showUninstallConform} onClose={handleClose}
                 app={props.data} onDataChange={props.onDataChange} onCloseFatherModal={props.onCloseFatherModal}
-                disableButton={props.disabledButton} enableButton={props.enableButton} />}
+                disableButton={props.disabledButton} enableButton={props.enableButton}
+                isMonitorApp={props.isMonitorApp} />}
         </>
     );
 });

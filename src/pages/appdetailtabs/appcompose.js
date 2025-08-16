@@ -13,7 +13,7 @@ import { Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 import Spinner from '../../components/Spinner';
 import { RedeployApp } from '../../helpers';
-import { getApiKey, getNginxConfig } from '../../helpers/api_apphub/apiCore_axios';
+import { getApiKey, getNginxConfig } from '../../helpers/api_apphub/apiCore';
 
 const _ = cockpit.gettext;
 

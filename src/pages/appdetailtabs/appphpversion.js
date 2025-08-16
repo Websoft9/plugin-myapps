@@ -97,8 +97,15 @@ const AppPhpVersion = (props) => {
                     }
                 };
 
+                // 动态获取企业微信webhook URL
+                const webhookUrlResult = await executeWithTimeout("docker exec -i websoft9-apphub apphub getsysconfig --section webhook --key wechat");
+                const webhookUrl = webhookUrlResult.trim();
+
+                if (!webhookUrl || webhookUrl === '' || webhookUrl.includes('error') || webhookUrl.includes('Error')) {
+                    throw new Error(_("Failed to get webhook URL"));
+                }
+
                 // 使用curl发送到企业微信webhook
-                const webhookUrl = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=9393241f-05b6-45a2-a3e7-b3ab5275cf09";
                 const script = `curl -s -X POST "${webhookUrl}" \\
                     -H "Content-Type: application/json" \\
                     -d '${JSON.stringify(webhookData).replace(/'/g, "'\"'\"'")}'`;

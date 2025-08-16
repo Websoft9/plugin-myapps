@@ -1,80 +1,341 @@
+import axios from 'axios';
 import cockpit from 'cockpit';
+import configManager from './configManager';
 
-class APICore {
-    constructor() {
-        this.address = "localhost";
-        this.port = 80;
+// content type
+axios.defaults.headers.common['Content-Type'] = 'application/json; charset=utf-8';
+
+// 配置缓存对象
+const configCache = {
+    apiKey: null,
+    nginxPort: null,
+    fetching: new Set()
+};
+
+const getNginxConfig = async () => {
+    // 检查缓存
+    if (configCache.nginxPort) {
+        return configCache.nginxPort;
     }
 
-    async getApiKey() {
-        try {
-            var script = "docker exec -i websoft9-apphub apphub getconfig --section api_key --key key";
-            const api_key = (await cockpit.spawn(["/bin/bash", "-c", script])).trim();
-            if (!api_key) {
-                return Promise.reject(new Error("Api Key Not Set"))
-            }
-            return api_key
-        }
-        catch (error) {
-            return Promise.reject("Get The Apphub's Api Key Error");
-        }
-    }
-
-    async request(method, path, params = null, body = null) {
-        path = "/api" + path;
-
-        let requestObject = {
-            path: path,
-            method: method,
-            body: body ? JSON.stringify(body) : ""
-        };
-
-        if (params !== null) {
-            requestObject.params = params;
-        }
-
-        return cockpit.http({
-            "address": this.address,
-            "port": this.port,
-            "headers": {
-                'Content-Type': 'application/json; charset=utf-8',
-                'x-api-key': await this.getApiKey()
-            }
-        }).request(requestObject).then(function (response) {
-            if (response) {
-                return JSON.parse(response);
-            }
-            else {
-                return null
-            }
-        }).catch(function (error, data) {
-            if (data) {
-                try {
-                    data = JSON.parse(data);
-                    error.message = data.details ? data.details : data;
-                } catch (e) {
-                    error.message = data;
+    // 防止并发重复请求
+    if (configCache.fetching.has('nginx')) {
+        return new Promise((resolve, reject) => {
+            const checkCache = () => {
+                if (configCache.nginxPort) {
+                    resolve(configCache.nginxPort);
+                } else if (!configCache.fetching.has('nginx')) {
+                    reject(new Error("Failed to get nginx config"));
+                } else {
+                    setTimeout(checkCache, 100);
                 }
-            }
-            return Promise.reject(error);
+            };
+            checkCache();
         });
     }
 
-    get(path, params) {
-        return this.request("GET", path, params);
-    }
+    configCache.fetching.add('nginx');
 
-    put(path, params, body) {
-        return this.request("PUT", path, params, body);
-    }
+    try {
+        var script = "docker exec -i websoft9-apphub apphub getconfig --section nginx_proxy_manager";
+        let content = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
+        content = JSON.parse(content);
+        let listen_port = content.listen_port;
 
-    post(path, params, body) {
-        return this.request("POST", path, params, body);
-    }
+        if (!listen_port) {
+            throw new Error("Nginx Listen Port Not Set");
+        }
 
-    delete(path, params) {
-        return this.request("DELETE", path, params);
+        // 缓存结果
+        configCache.nginxPort = listen_port;
+        return listen_port;
+    }
+    catch (error) {
+        const errorText = [error.problem, error.reason, error.message]
+            .filter(item => typeof item === 'string')
+            .join(' ');
+
+        if (errorText.includes("permission denied")) {
+            throw new Error("Your user does not have Docker permissions. Grant Docker permissions to this user by command: sudo usermod -aG docker <username>");
+        }
+        else {
+            throw new Error(errorText || "Get Nginx Listen Port Error");
+        }
+    } finally {
+        configCache.fetching.delete('nginx');
     }
 }
 
-export { APICore };
+const getApiKey = async () => {
+    // 检查缓存
+    if (configCache.apiKey) {
+        return configCache.apiKey;
+    }
+
+    // 防止并发重复请求
+    if (configCache.fetching.has('apikey')) {
+        return new Promise((resolve, reject) => {
+            const checkCache = () => {
+                if (configCache.apiKey) {
+                    resolve(configCache.apiKey);
+                } else if (!configCache.fetching.has('apikey')) {
+                    reject(new Error("Failed to get api key"));
+                } else {
+                    setTimeout(checkCache, 100);
+                }
+            };
+            checkCache();
+        });
+    }
+
+    configCache.fetching.add('apikey');
+
+    try {
+        var script = "docker exec -i websoft9-apphub apphub getconfig --section api_key --key key";
+        const api_key = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
+        if (!api_key) {
+            throw new Error(" Api Key Not Set");
+        }
+
+        // 缓存结果
+        configCache.apiKey = api_key;
+        return api_key;
+    }
+    catch (error) {
+        const errorText = [error.problem, error.reason, error.message]
+            .filter(item => typeof item === 'string')
+            .join(' ');
+
+        if (errorText.includes("permission denied")) {
+            throw new Error("Your user does not have Docker permissions. Grant Docker permissions to this user by command: sudo usermod -aG docker <username>");
+        }
+        else {
+            throw new Error(errorText || "Get The Apphub's Api Key Error");
+        }
+    } finally {
+        configCache.fetching.delete('apikey');
+    }
+}
+
+// 检查是否为配置错误并清除相应缓存
+const handleConfigError = (error) => {
+    const status = error.response?.status;
+    const details = error.response?.data?.details;
+
+    // API Key 无效 - 后端返回 400 + "Invalid API Key"
+    if (status === 400 && details === "Invalid API Key") {
+        console.warn('[Config Error] Invalid API Key detected, clearing cache');
+        configCache.apiKey = null;
+        // 同时清除 configManager 的缓存
+        configManager.clearCache();
+        return true;
+    }
+
+    // Nginx 端口/连接错误
+    if (status === 404 || status === 502 || status === 503 ||
+        error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        console.warn('[Config Error] Nginx connection error detected, clearing cache');
+        configCache.nginxPort = null;
+        // 同时清除 configManager 的缓存
+        configManager.clearCache();
+        return true;
+    }
+
+    return false;
+};
+
+// intercepting to capture errors
+axios.interceptors.response.use(
+    (response) => {
+        if (response.status === 200) {
+            return response.data;
+        }
+        // else if (response.status === 204) {
+        //     return null;
+        // }
+    },
+    (error) => {
+        error.message = error.response?.data?.details || error.message || "Unknown Error";
+        return Promise.reject(error);
+    }
+);
+
+class APICore {
+    constructor() {
+        this.axiosInstance = null;
+        // 预加载配置以优化首次请求
+        configManager.preload();
+    }
+
+    // 创建带缓存配置的 axios 实例
+    async getAxiosInstance() {
+        if (!this.axiosInstance) {
+            try {
+                // 优先使用 configManager 获取配置
+                const config = await configManager.initialize();
+
+                this.axiosInstance = axios.create({
+                    baseURL: config.apiURL,
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'x-api-key': config.apiKey
+                    },
+                    timeout: 30000
+                });
+
+            } catch (error) {
+                // 回退到原有的直接获取方法
+                const [apiKey, nginxPort] = await Promise.all([
+                    getApiKey(),
+                    getNginxConfig()
+                ]);
+
+                this.axiosInstance = axios.create({
+                    baseURL: `${window.location.protocol}//${window.location.hostname}:${nginxPort}/api`,
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'x-api-key': apiKey
+                    },
+                    timeout: 30000
+                });
+            }
+
+            // 只为这个实例设置拦截器，不影响全局
+            this.setupInstanceInterceptors();
+        }
+        return this.axiosInstance;
+    }
+
+    // 为当前实例设置拦截器
+    setupInstanceInterceptors() {
+        // 响应拦截器
+        this.axiosInstance.interceptors.response.use(
+            (response) => {
+                // 成功响应，返回数据
+                return response.status === 200 ? response.data : response;
+            },
+            (error) => {
+                // 检查并处理配置错误
+                const isConfigError = handleConfigError(error);
+                if (isConfigError) {
+                    // 标记为配置错误，调用方可以选择重试
+                    error.configError = true;
+                }
+
+                error.message = error.response?.data?.details || error.message || "Unknown Error";
+                return Promise.reject(error);
+            }
+        );
+    }
+
+    // 重置实例（配置错误时使用）
+    resetInstance() {
+        this.axiosInstance = null;
+        // 同时清除 configManager 的缓存
+        configManager.clearCache();
+    }
+
+    // 带重试的请求方法
+    async requestWithRetry(method, url, data = null, params = null) {
+        let lastError;
+
+        // 最多重试一次
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const instance = await this.getAxiosInstance();
+
+                let response;
+                switch (method.toLowerCase()) {
+                    case 'get':
+                        response = await instance.get(url, { params });
+                        break;
+                    case 'post':
+                        response = await instance.post(url, data, { params });
+                        break;
+                    case 'put':
+                        response = await instance.put(url, data, { params });
+                        break;
+                    case 'delete':
+                        response = await instance.delete(url, { params });
+                        break;
+                    default:
+                        throw new Error(`Unsupported method: ${method}`);
+                }
+
+                // 直接返回拦截器处理后的结果
+                return response;
+            } catch (error) {
+                lastError = error;
+
+                // 如果是配置错误且是第一次尝试，重置实例并重试
+                if (error.configError && attempt === 0) {
+                    console.info(`[API Retry] Config error detected, resetting instance and retrying...`);
+                    this.resetInstance();
+                    await new Promise(resolve => setTimeout(resolve, 200)); // 短暂等待
+                    continue;
+                }
+
+                // 其他情况直接抛出错误
+                break;
+            }
+        }
+
+        throw lastError;
+    }
+
+    get = async (url, params) => {
+        return this.requestWithRetry('get', url, null, params);
+    };
+
+    post = async (url, data, params) => {
+        return this.requestWithRetry('post', url, data, params);
+    };
+
+    put = async (url, data, params) => {
+        return this.requestWithRetry('put', url, data, params);
+    };
+
+    delete = async (url, params) => {
+        return this.requestWithRetry('delete', url, null, params);
+    };
+}
+
+// 获取PHP应用配置
+const getPhpAppsConfig = async () => {
+    try {
+        const phpScript = "docker exec -i websoft9-apphub apphub getsysconfig --section php_apps";
+        let phpContent = (await cockpit.spawn(["/bin/bash", "-c", phpScript], { superuser: "try" })).trim();
+
+        if (!phpContent) {
+            return [];
+        }
+
+        phpContent = JSON.parse(phpContent);
+
+        const apps = phpContent && phpContent.keys ? phpContent.keys.split(',').map(app => app.trim()) : [];
+        return apps;
+    } catch (phpError) {
+        console.error('[getPhpAppsConfig] Failed to get PHP apps config:', phpError);
+        return [];
+    }
+};
+
+// 获取监控应用配置
+const getMonitorAppsConfig = async () => {
+    try {
+        const monitorScript = "docker exec -i websoft9-apphub apphub getsysconfig --section appmonitor --key keys";
+        let monitorContent = (await cockpit.spawn(["/bin/bash", "-c", monitorScript], { superuser: "try" })).trim();
+
+        if (!monitorContent) {
+            return [];
+        }
+
+        const apps = monitorContent ? monitorContent.split(',').map(app => app.trim()).filter(app => app) : [];
+        return apps;
+    } catch (monitorError) {
+        console.error('[getMonitorAppsConfig] Failed to get monitor apps config:', monitorError);
+        return [];
+    }
+};
+
+export { APICore, getNginxConfig, getApiKey, getPhpAppsConfig, getMonitorAppsConfig, configManager };

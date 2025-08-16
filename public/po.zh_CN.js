@@ -454,7 +454,7 @@ cockpit.locale({
     ],
     "Volumes": [
         null,
-        "卷存"
+        "数据"
     ],
     "Driver": [
         null,
@@ -1103,6 +1103,186 @@ cockpit.locale({
     "Request submission failed": [
         null,
         "申请提交失败"
+    ],
+    "Monitor": [
+        null,
+        "监控"
+    ],
+    "Monitor URL": [
+        null,
+        "监控网站"
+    ],
+    "Monitor website uptime and performance with real-time alerts": [
+        null,
+        "监控网站的正常运行时间和性能，并提供实时警报"
+    ],
+    "Notification Email": [
+        null,
+        "通知邮箱"
+    ],
+    "Enable": [
+        null,
+        "启用"
+    ],
+    "Enabled": [
+        null,
+        "已启用"
+    ],
+    "Note:": [
+        null,
+        "注意："
+    ],
+    "Please bind a domain name to the application before enabling monitoring.": [
+        null,
+        "启用监控前请先为应用绑定域名。"
+    ],
+    "Select monitor URL": [
+        null,
+        "选择监控网址"
+    ],
+    "No domain names available": [
+        null,
+        "无可用域名"
+    ],
+    "Invalid email": [
+        null,
+        "无效邮箱"
+    ],
+    "Monitor website uptime and performance with real-time alerts and email notifications": [
+        null,
+        "监控网站的正常运行时间和性能，并提供实时警报和电子邮件通知。"
+    ],
+    "Enabling...": [
+        null,
+        "启用中..."
+    ],
+    "Edit": [
+        null,
+        "修改"
+    ],
+    "Disable": [
+        null,
+        "禁用"
+    ],
+    "Disabling...": [
+        null,
+        "禁用中..."
+    ],
+    "Updating...": [
+        null,
+        "更新中..."
+    ],
+    "Backups": [
+        null,
+        "备份"
+    ],
+    "Create": [
+        null,
+        "创建"
+    ],
+    "Create Backup": [
+        null,
+        "创建备份"
+    ],
+    "Restore": [
+        null,
+        "恢复"
+    ],
+    "The following volumes will be backed up:": [
+        null,
+        "以下数据卷将被备份："
+    ],
+    "Tips:": [
+        null,
+        "提示："
+    ],
+    "All application volumes will be included in this backup": [
+        null,
+        "所有应用程序卷将包含在此备份中"
+    ],
+    "The backup process may take several minutes depending on data size": [
+        null,
+        "备份过程可能需要几分钟，具体取决于数据大小"
+    ],
+    "Applications will remain accessible during backup": [
+        null,
+        "所有应用程序卷将在备份期间保持可访问"
+    ],
+    "ID": [
+        null,
+        "编号"
+    ],
+    "Size": [
+        null,
+        "大小"
+    ],
+    "Action": [
+        null,
+        "操作"
+    ],
+    "Are you sure you want to delete this backup? This action cannot be undone.": [
+        null,
+        "您确定要删除此备份吗？此操作无法撤消。"
+    ],
+    "I confirm that the backup cannot be recovered after deletion, and the data cannot be retrieved.": [
+        null,
+        "我确认删除后备份无法恢复，数据无法找回。"
+    ],
+    "Delete Backup": [
+        null,
+        "删除备份"
+    ],
+    "Restore Backup": [
+        null,
+        "恢复备份"
+    ],
+    "Are you sure you want to restore this backup? This action will roll back your volumes to the state of this backup.": [
+        null,
+        "您确定要恢复此备份吗？此操作将使您的数据回滚到此备份的状态。"
+    ],
+    "The application will be automatically stopped before restoration and restarted after completion.": [
+        null,
+        "应用程序将在恢复之前自动停止，并在完成后重新启动。"
+    ],
+    "Restoring a backup will replace your current volume data. All data and changes made after this backup was created will be lost.": [
+        null,
+        "恢复备份将替换您当前的卷数据。所有在此备份创建后所做的数据和更改将丢失。"
+    ],
+    "The restoration process may take several minutes depending on the data size.": [
+        null,
+        "恢复过程可能需要几分钟，具体取决于数据大小。"
+    ],
+    "Applications may be temporarily unavailable during the restoration process.": [
+        null,
+        "在恢复过程中，应用程序可能会暂时不可用。"
+    ],
+    "Restoration carries risks. Please ensure you understand the implications before proceeding.": [
+        null,
+        "恢复操作存在风险。请确保在继续之前了解其影响。"
+    ],
+    "I understand the risks and confirm to restore this backup, knowing that all data and changes after this backup will be lost and cannot be recovered.": [
+        null,
+        "我理解风险并确认恢复此备份，知道此备份之后的所有数据和更改将丢失且无法恢复。"
+    ],
+    "Backup restoration may encounter unexpected errors or failures, which could potentially render the application unavailable.": [
+        null,
+        "备份恢复可能会遇到意外错误或故障，这可能会导致应用程序不可用。"
+    ],
+    "Failed to create backup": [
+        null,
+        "备份创建失败"
+    ],
+    "Backup restored successfully! Application has been restarted and is now available.": [
+        null,
+        "备份恢复成功！应用程序已重新启动并且现在可用。"
+    ],
+    "Backup deleted successfully!": [
+        null,
+        "备份删除成功！"
+    ],
+    "Backup created successfully!": [
+        null,
+        "备份创建成功！"
     ]
 });
 

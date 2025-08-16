@@ -12,6 +12,7 @@ import { Button, Modal } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 import Spinner from '../components/Spinner';
 import { AppDomainCreateByAppID, AppDomainDeleteByProxyID, AppDomainUpdateByProxyID } from '../helpers';
+import { checkAndDisableMonitoring, checkAndDisableMonitoringForDeletedDomains } from '../utils/monitorUtils';
 
 const _ = cockpit.gettext;
 
@@ -37,6 +38,22 @@ const DeleteDomainConform = (props) => {
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
     const [showCloseButton, setShowCloseButton] = useState(true);//用于是否显示关闭按钮
     const [alertType, setAlertType] = useState("");  //用于确定弹窗的类型：error\success
+
+    // 检查删除的域名是否正在被监控
+    const checkAndDisableMonitoringForDomains = async (appId, domains) => {
+        if (!appId || !domains || domains.length === 0) {
+            return;
+        }
+
+        try {
+            // 检查被删除的域名是否正在被监控，如果是则禁用监控
+            await checkAndDisableMonitoringForDeletedDomains(appId, domains);
+            console.log(`Checked monitoring for deleted domains: ${domains.join(', ')}`);
+        } catch (error) {
+            // 监控检查失败不应该阻止域名删除
+            console.warn(`Failed to check/disable monitoring for deleted domains:`, error.message || error);
+        }
+    };
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -69,6 +86,12 @@ const DeleteDomainConform = (props) => {
                         setDisable(true);
                         setShowCloseButton(false);
                         try {
+                            // 首先检查并禁用监控（如果使用了被删除的域名）
+                            if (props.app_id && props.isMonitorApp) {
+                                await checkAndDisableMonitoringForDomains(props.app_id, props.domains);
+                            }
+
+                            // 然后删除域名
                             await AppDomainDeleteByProxyID(props.proxy_id);
                             props.onDataChange();
                             props.onClose();
@@ -259,8 +282,9 @@ const TagsInput = forwardRef(({
     defaultEditable = false,
     onDeleteRow,
     onSaveRow,
-    onDataChange
-}, ref): React$Element<React$FragmentType> => {
+    onDataChange,
+    isMonitorApp = false
+}, ref) => {
     const [tags, setTags] = useState(initialTags);
     const [tempTags, setTempTags] = useState(initialTags);
     const [inputValue, setInputValue] = useState('');
@@ -510,7 +534,7 @@ const TagsInput = forwardRef(({
             }
             {
                 showRemoveDomain &&
-                <DeleteDomainConform proxy_id={proxy_id} domains={tags} showConform={handleDeleteClick} onClose={handleCloseClick} onDataChange={onDataChange} />
+                <DeleteDomainConform proxy_id={proxy_id} domains={tags} showConform={handleDeleteClick} onClose={handleCloseClick} onDataChange={onDataChange} app_id={app_id} isMonitorApp={isMonitorApp} />
             }
             {
                 showUpdateDomain &&

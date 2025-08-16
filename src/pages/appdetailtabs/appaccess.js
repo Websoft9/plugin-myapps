@@ -21,7 +21,7 @@ const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
 });
 
 
-const AppAccess = (props): React$Element<React$FragmentType> => {
+const AppAccess = (props) => {
     const navigate = useNavigate(); //用于页面跳转
     // const [domains, setDomains] = useState([]); // 定义域名数组
     const [loading, setLoading] = useState(false); // 定义执行操作时的加载转态
@@ -190,7 +190,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                 <Row className="mb-2" key={index}>
                                                     <Col xs={12} className="d-flex justify-content-between">
                                                         <Col>
-                                                            <TagsInput initialTags={row?.domain_names} proxy_id={row?.id} onDataChange={props.onDataChange} />
+                                                            <TagsInput initialTags={row?.domain_names} proxy_id={row?.id} app_id={props?.data?.app_id} isMonitorApp={props?.isMonitorApp} onDataChange={props.onDataChange} />
                                                         </Col>
                                                     </Col>
                                                 </Row>
@@ -208,6 +208,7 @@ const AppAccess = (props): React$Element<React$FragmentType> => {
                                                                 onSaveRow={() => handleSaveRow(index)}
                                                                 onDeleteRow={() => deletDomaineRow(index)}
                                                                 onDataChange={props.onDataChange}
+                                                                isMonitorApp={props?.isMonitorApp}
                                                             />
                                                         </Col>
                                                     </Col>

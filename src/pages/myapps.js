@@ -10,8 +10,11 @@ import DefaultImgEn from '../assets/images/default_en.png';
 import DefaultImgzh from '../assets/images/default_zh.png';
 import FormInput from '../components/FormInput';
 import Spinner from '../components/Spinner';
+import AppSkeleton from '../components/AppSkeleton';
 import { Apps, RedeployApp, RemoveApp, RemoveErrorApp } from '../helpers';
 import AppDetailModal from './appdetail';
+
+import configManager from '../helpers/api_apphub/configManager';
 
 const _ = cockpit.gettext;
 const language = cockpit.language;//获取cockpit的当前语言环境
@@ -40,7 +43,7 @@ const formatLog = (log) => {
 }
 
 // 日志显示弹窗
-const InstallingLogModal = (props): React$Element<React$FragmentType> => {
+const InstallingLogModal = (props) => {
     const logs = props.app.logs || [];
     return (
         <Modal show={props.showConform} onHide={props.onClose} size="lg" scrollable="true" backdrop="static">
@@ -72,7 +75,7 @@ const InstallingLogModal = (props): React$Element<React$FragmentType> => {
 }
 
 //应用状态为error时，显示错误消息
-const ErrorInfoModal = (props): React$Element<React$FragmentType> => {
+const ErrorInfoModal = (props) => {
     return (
         <Modal show={props.showConform} onHide={props.onClose} size="lg" scrollable="true" backdrop="static">
             <Modal.Header onHide={props.onClose} closeButton className={classNames('modal-colored-header', 'bg-danger')}>
@@ -99,7 +102,7 @@ const ErrorInfoModal = (props): React$Element<React$FragmentType> => {
 }
 
 //重建应用弹窗
-const RedeployAppConform = (props): React$Element<React$FragmentType> => {
+const RedeployAppConform = (props) => {
     const navigate = useNavigate(); //用于页面跳转
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
@@ -108,7 +111,8 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
     const [pullImage, setPullImage] = useState(false); //重建时是否重新拉取镜像
 
     function closeAllModals() {
-        window.location.reload(true);
+        props.onClose();
+        props.onDataChange();
     }
 
     const handleClose = (event, reason) => {
@@ -190,7 +194,7 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
 }
 
 //删除应用弹窗
-const RemoveAppConform = (props): React$Element<React$FragmentType> => {
+const RemoveAppConform = (props) => {
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
     const [alertMessage, setAlertMessage] = useState("");//用于显示错误提示消息
@@ -198,7 +202,8 @@ const RemoveAppConform = (props): React$Element<React$FragmentType> => {
     const [currentApp, setCurrentApp] = useState(props.app);
 
     function closeAllModals() {
-        window.location.reload(true);
+        props.onClose();
+        props.onDataChange();
     }
 
     const handleClose = (event, reason) => {
@@ -270,7 +275,7 @@ const RemoveAppConform = (props): React$Element<React$FragmentType> => {
     );
 }
 
-const MyApps = (): React$Element<React$FragmentType> => {
+const MyApps = () => {
     const [showModal, setShowModal] = useState(false); //用于显示状态为running或exited弹窗的标识
     const [showRemoveConform, setShowRemoveConform] = useState(false); //用于显示状态为inactive时显示确定删除的弹窗
     const [showRedeployConform, setShowRedeployConform] = useState(false); //用于显示状态为inactive时显示确定重建的弹窗
@@ -290,50 +295,45 @@ const MyApps = (): React$Element<React$FragmentType> => {
     const [installingLog, setInstallingLog] = useState(""); // 用于存储安装日志
     const [showInstallingLog, setShowInstallingLog] = useState(false); // 用于显示安装日志弹窗的标识    
     const [phpApps, setPhpApps] = useState([]); // 用于存储支持PHP的应用列表
+    const [monitorApps, setMonitorApps] = useState([]); // 用于存储支持监控的应用列表
 
     const selectedAppRef = useRef(selectedApp);
     const navigate = useNavigate(); //用于页面跳转
 
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false); // 用于控制手动刷新状态
 
-    const getNginxConfig = async () => {
+    const initializeConfig = async () => {
         try {
-            var script = "docker exec -i websoft9-apphub apphub getconfig --section nginx_proxy_manager";
-            let content = (await cockpit.spawn(["/bin/bash", "-c", script], { superuser: "try" })).trim();
-            content = JSON.parse(content);
-            let listen_port = content.listen_port;
+            // 使用统一的配置管理器，一次性获取所有配置
+            const config = await configManager.initialize();
+            baseURL = config.baseURL;
 
-            baseURL = `${window.location.protocol}//${window.location.hostname}:${listen_port}`;
+            // 从配置中获取应用列表
+            setPhpApps(config.phpApps || []);
+            setMonitorApps(config.monitorApps || []);
 
-            // 获取PHP应用配置
-            try {
-                var phpScript = "docker exec -i websoft9-apphub apphub getconfig --section php_apps";
-                let phpContent = (await cockpit.spawn(["/bin/bash", "-c", phpScript], { superuser: "try" })).trim();
-                phpContent = JSON.parse(phpContent);
-                const apps = phpContent.keys ? phpContent.keys.split(',').map(app => app.trim()) : [];
-                setPhpApps(apps);
-            } catch (phpError) {
-                console.error('Failed to get PHP apps config:', phpError);
-                setPhpApps([]);
-            }
-        }
-        catch (error) {
+        } catch (error) {
             const errorText = [error.problem, error.reason, error.message]
                 .filter(item => typeof item === 'string')
                 .join(' ');
 
             if (errorText.includes("permission denied")) {
                 setError(_("Your user does not have Docker permissions. Grant Docker permissions to this user by command: sudo usermod -aG docker <username>"));
+            } else {
+                setError(errorText || "Configuration Initialization Error");
             }
-            else {
-                setError(errorText || "Get Nginx Listen Port Error");
-            }
+            throw error; // 重新抛出错误，阻止后续API调用
         }
     }
 
-    const getApps = async () => {
+    const getApps = async (isRefresh = false) => {
         try {
+            if (isRefresh) {
+                setRefreshing(true);
+            }
+
             const newApps = await Apps();
             const statusOrder = [3, 1, 2, 0, 4]; // 定义状态的排序顺序
 
@@ -367,6 +367,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
             }
 
             setLoading(false);
+            setRefreshing(false);
             setError(null);
         }
         catch (error) {
@@ -387,6 +388,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     setError(errorText || "Fetch Data Error");
                 }
             }
+            setRefreshing(false);
         }
     }
 
@@ -398,7 +400,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                await getNginxConfig();
+                await initializeConfig();
                 await getApps();
                 setLoading(false);
             } catch (error) {
@@ -411,7 +413,25 @@ const MyApps = (): React$Element<React$FragmentType> => {
         fetchData();
         timer = setInterval(async () => {
             if (isMounted) { // 只有在组件挂载的情况下才调用 getApps
-                await getApps(cancelTokenSource.token);
+                await getApps(false); // 定时刷新不是手动刷新，传入false
+
+                // 每次应用刷新时也检查配置更新
+                // configManager 内部会智能判断是否需要真正更新
+                try {
+                    const config = await configManager.initialize();
+                    // 只有当配置真正发生变化时才更新状态
+                    const currentPhpApps = JSON.stringify(phpApps);
+                    const currentMonitorApps = JSON.stringify(monitorApps);
+                    const newPhpApps = JSON.stringify(config.phpApps || []);
+                    const newMonitorApps = JSON.stringify(config.monitorApps || []);
+
+                    if (currentPhpApps !== newPhpApps || currentMonitorApps !== newMonitorApps) {
+                        setPhpApps(config.phpApps || []);
+                        setMonitorApps(config.monitorApps || []);
+                    }
+                } catch (error) {
+                    console.warn('Failed to check config during auto-refresh:', error);
+                }
             }
         }, 5000);
 
@@ -508,6 +528,11 @@ const MyApps = (): React$Element<React$FragmentType> => {
         getApps();
     };
 
+    //用于手动刷新数据
+    const handleRefresh = () => {
+        getApps(true);
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 1: // Active
@@ -547,7 +572,45 @@ const MyApps = (): React$Element<React$FragmentType> => {
 
     return (
         // error ? <p>Error : {error} </p> :
-        loading ? <Spinner animation="border" variant="secondary" className='dis_mid mb-5' /> :
+        loading ? (
+            <>
+                <Row className="align-items-center">
+                    <Col xs={12} sm={6} md={3} lg={2}>
+                        <FormInput
+                            value={selectedStatus}
+                            name="select"
+                            type="select"
+                            className="form-select"
+                            key="select"
+                            disabled
+                        >
+                            <option value="all">{_("All States")}</option>
+                        </FormInput>
+                    </Col>
+                    <Col xs={12} sm={12} md={6} lg={9}>
+                        <FormInput
+                            type="text"
+                            name="search"
+                            placeholder={_("Search for apps like WordPress, MySQL, GitLab, …")}
+                            disabled
+                        />
+                    </Col>
+                    <Col xs={12} sm={12} md={12} lg={1}>
+                        <Button
+                            variant="primary"
+                            className="float-end"
+                            disabled
+                        >
+                            {_("Refresh")}
+                        </Button>
+                    </Col>
+                </Row>
+                <div style={{ marginTop: '30px' }}>
+                    <h4 style={{ marginBottom: '20px' }}>{_("Websoft9's Apps")}</h4>
+                    <AppSkeleton count={6} />
+                </div>
+            </>
+        ) :
             error ? <div className="d-flex align-items-center justify-content-center m-5" style={{ flexDirection: "column" }}>
                 <Spinner animation="border" variant="secondary" className='mb-5' />
                 <ReactAlert variant="danger" className="my-2">
@@ -587,10 +650,10 @@ const MyApps = (): React$Element<React$FragmentType> => {
                             <Button
                                 variant="primary"
                                 className="float-end"
-                                onClick={() => {
-                                    window.location.reload(true);
-                                }}
+                                disabled={refreshing}
+                                onClick={handleRefresh}
                             >
+                                {refreshing && <Spinner className="spinner-border-sm me-1" tag="span" color="white" />}
                                 {_("Refresh")}
                             </Button>
                         </Col>
@@ -749,7 +812,7 @@ const MyApps = (): React$Element<React$FragmentType> => {
                     }
                     {
                         showModal && selectedApp && selectedApp.status === 1 &&
-                        <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} baseURL={baseURL} isPhpApp={phpApps.includes(selectedApp.app_name)} />
+                        <AppDetailModal current_app={selectedApp} showFlag={showModal} onClose={handleClose} onDataChange={handleDataChange} baseURL={baseURL} isPhpApp={phpApps.includes(selectedApp.app_name)} isMonitorApp={monitorApps.includes(selectedApp.app_name)} />
                     }
                     {
                         showRemoveConform && selectedApp && (selectedApp.status === 4 || selectedApp.status === 2) &&
