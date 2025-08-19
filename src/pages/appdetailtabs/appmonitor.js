@@ -4,7 +4,8 @@ import { Card, Col, Row, Form, Button, Spinner } from 'react-bootstrap';
 import MuiAlert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import { executeWithTimeout, executeCurlCommand, getSystemConfig } from '../../helpers/api_apphub';
-import { monitorAPI, metadataService, configService } from '../../utils/monitorUtils';
+import { monitorAPI, metadataService } from '../../utils/monitorUtils';
+import configManager from '../../helpers/api_apphub/configManager';
 
 const _ = cockpit.gettext;
 
@@ -251,10 +252,10 @@ const AppMonitor = (props) => {
     // 组件挂载时查询监控状态
     useEffect(() => {
         if (app_id) {
-            // 初始化配置并查询监控状态
+            // 使用统一的配置管理器并查询监控状态
             const initializeAndQuery = async () => {
                 try {
-                    await configService.initializeConfig();
+                    await configManager.initialize();
                     await queryMonitorStatus();
                 } catch (error) {
                     console.error("Failed to initialize config or query status:", error);

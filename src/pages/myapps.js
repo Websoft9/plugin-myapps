@@ -11,9 +11,8 @@ import DefaultImgzh from '../assets/images/default_zh.png';
 import FormInput from '../components/FormInput';
 import Spinner from '../components/Spinner';
 import AppSkeleton from '../components/AppSkeleton';
-import { Apps, RedeployApp, RemoveApp, RemoveErrorApp } from '../helpers';
+import { Apps, RedeployApp, RemoveApp, RemoveErrorApp, resetApiInstance } from '../helpers';
 import AppDetailModal from './appdetail';
-
 import configManager from '../helpers/api_apphub/configManager';
 
 const _ = cockpit.gettext;
@@ -40,6 +39,22 @@ const formatLog = (log) => {
         return `${log.status} ${log.progress || ''} ${log.id || ''}`.trim();
     }
     return '';
+}
+
+// 高效比较两个数组是否相等
+const arraysEqual = (a, b) => {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length !== b.length) return false;
+
+    // 对数组进行排序比较，避免顺序影响
+    const sortedA = [...a].sort();
+    const sortedB = [...b].sort();
+
+    for (let i = 0; i < sortedA.length; ++i) {
+        if (sortedA[i] !== sortedB[i]) return false;
+    }
+    return true;
 }
 
 // 日志显示弹窗
@@ -313,8 +328,9 @@ const MyApps = () => {
             // 从配置中获取应用列表
             setPhpApps(config.phpApps || []);
             setMonitorApps(config.monitorApps || []);
-
         } catch (error) {
+            console.error('[MyApps] Configuration initialization failed:', error);
+
             const errorText = [error.problem, error.reason, error.message]
                 .filter(item => typeof item === 'string')
                 .join(' ');
@@ -334,7 +350,16 @@ const MyApps = () => {
                 setRefreshing(true);
             }
 
-            const newApps = await Apps();
+            let newApps;
+            try {
+                newApps = await Apps();
+            } catch (apiError) {
+                console.warn('[MyApps] API call failed, attempting recovery...', apiError);
+                // 重置API实例并重试一次
+                resetApiInstance();
+                newApps = await Apps();
+            }
+
             const statusOrder = [3, 1, 2, 0, 4]; // 定义状态的排序顺序
 
             // 创建一个映射表，用于将状态映射到其排序索引
@@ -397,40 +422,66 @@ const MyApps = () => {
         let isMounted = true; // 增加一个标志来跟踪挂载状态
         const cancelTokenSource = axios.CancelToken.source();
 
+        // 注意：配置预加载已在 index.js 中进行，这里不需要重复调用
+
         const fetchData = async () => {
             try {
                 setLoading(true);
-                await initializeConfig();
+
+                // 由于配置已在 index.js 中预加载，这里只需要确保配置可用
+                // 不需要重新初始化，直接使用缓存的配置
+                try {
+                    const config = await configManager.getConfigAsync();
+                    baseURL = config.baseURL;
+                    setPhpApps(config.phpApps || []);
+                    setMonitorApps(config.monitorApps || []);
+                    console.log('[MyApps] Using preloaded config, skipping initialization');
+                } catch (configError) {
+                    // 只有在配置获取失败时才进行初始化
+                    console.warn('[MyApps] Preloaded config not available, initializing...', configError);
+                    await initializeConfig();
+                }
+
                 await getApps();
                 setLoading(false);
             } catch (error) {
+                console.error('[MyApps] Initial data fetch failed:', error);
                 if (timer !== null) {
                     clearInterval(timer);
                 }
+                setLoading(false);
             }
         };
 
         fetchData();
+
+        // 计数器，用于降低配置检查频率
+        let refreshCount = 0;
+
         timer = setInterval(async () => {
             if (isMounted) { // 只有在组件挂载的情况下才调用 getApps
                 await getApps(false); // 定时刷新不是手动刷新，传入false
 
-                // 每次应用刷新时也检查配置更新
-                // configManager 内部会智能判断是否需要真正更新
-                try {
-                    const config = await configManager.initialize();
-                    // 只有当配置真正发生变化时才更新状态
-                    const currentPhpApps = JSON.stringify(phpApps);
-                    const currentMonitorApps = JSON.stringify(monitorApps);
-                    const newPhpApps = JSON.stringify(config.phpApps || []);
-                    const newMonitorApps = JSON.stringify(config.monitorApps || []);
+                // 降低配置检查频率：每30秒（6次刷新）才检查一次配置
+                // 这样可以减少不必要的配置调用开销
+                refreshCount++;
+                if (refreshCount % 6 === 0) {
+                    try {
+                        // 由于 configManager 有智能缓存，降低频率后更高效
+                        const config = await configManager.getConfigAsync(); // 使用异步缓存优先版本
 
-                    if (currentPhpApps !== newPhpApps || currentMonitorApps !== newMonitorApps) {
-                        setPhpApps(config.phpApps || []);
-                        setMonitorApps(config.monitorApps || []);
+                        // 使用更高效的方式检查配置变化
+                        const hasPhpAppsChanged = !arraysEqual(phpApps, config.phpApps || []);
+                        const hasMonitorAppsChanged = !arraysEqual(monitorApps, config.monitorApps || []);
+
+                        if (hasPhpAppsChanged || hasMonitorAppsChanged) {
+                            console.log('[MyApps] Config changed during auto-refresh, updating...');
+                            setPhpApps(config.phpApps || []);
+                            setMonitorApps(config.monitorApps || []);
+                        }
+                    } catch (error) {
+                        console.warn('[MyApps] Failed to check config during auto-refresh:', error);
                     }
-                } catch (error) {
-                    console.warn('Failed to check config during auto-refresh:', error);
                 }
             }
         }, 5000);
@@ -529,8 +580,25 @@ const MyApps = () => {
     };
 
     //用于手动刷新数据
-    const handleRefresh = () => {
-        getApps(true);
+    const handleRefresh = async () => {
+        try {
+            setRefreshing(true);
+
+            // 强制刷新配置缓存
+            const refreshedConfig = await configManager.refresh();
+
+            // 更新配置相关状态
+            baseURL = refreshedConfig.baseURL;
+            setPhpApps(refreshedConfig.phpApps || []);
+            setMonitorApps(refreshedConfig.monitorApps || []);
+
+            // 刷新应用列表
+            await getApps(true);
+        } catch (error) {
+            console.error('[MyApps] Manual refresh failed:', error);
+            // 仍然尝试刷新应用列表，即使配置刷新失败
+            await getApps(true);
+        }
     };
 
     const getStatusColor = (status) => {

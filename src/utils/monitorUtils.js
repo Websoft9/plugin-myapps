@@ -1,4 +1,5 @@
 import { executeWithTimeout, executeCurlCommand, getSystemConfig } from '../helpers/api_apphub';
+import configManager from '../helpers/api_apphub/configManager';
 
 // 系统配置常量（默认值）
 const DEFAULT_CONFIG = {
@@ -7,64 +8,37 @@ const DEFAULT_CONFIG = {
     REQUEST_TIMEOUT: 15000,
 };
 
-// 动态配置对象
-let CONFIG = { ...DEFAULT_CONFIG };
-
-// 配置服务类
-class ConfigService {
-    // 获取websoft9配置
-    async getWebsoft9Config() {
+// 监控API调用工具类
+class MonitorAPI {
+    // 生成动态API URL  
+    async getApiUrl() {
         try {
-            // 使用封装的命令执行器获取webhook配置
-            const response = await getSystemConfig('webhook');
+            // 使用统一的配置管理器获取配置
+            const config = await configManager.getConfig();
 
-            // 尝试解析JSON响应
+            // 从配置中获取监控API地址，如果没有则使用默认值
+            if (config && config.monitorApi) {
+                return config.monitorApi;
+            }
+
+            // 尝试从webhook配置获取monitor_api
+            const response = await getSystemConfig('webhook');
             let configData;
             try {
                 configData = JSON.parse(response);
+                if (configData.monitor_api) {
+                    return configData.monitor_api;
+                }
             } catch (parseError) {
-                console.warn("Failed to parse config response as JSON:", parseError);
-                return DEFAULT_CONFIG;
+                console.warn("Failed to parse webhook config for monitor API:", parseError);
             }
 
-            // 构建新的配置对象
-            const newConfig = { ...DEFAULT_CONFIG };
-
-            // 从webhook配置中获取monitor_api地址
-            if (configData.monitor_api) {
-                newConfig.API_BASE_URL_TEMPLATE = configData.monitor_api;
-                console.log("Monitor API URL loaded from config:", configData.monitor_api);
-            } else {
-                console.warn("monitor_api not found in webhook config, using default");
-            }
-
-            return newConfig;
+            // 返回默认值
+            return DEFAULT_CONFIG.API_BASE_URL_TEMPLATE;
         } catch (error) {
-            console.warn("Failed to get websoft9 config, using defaults:", error);
-            return DEFAULT_CONFIG;
+            console.warn("Failed to get monitor API URL, using default:", error);
+            return DEFAULT_CONFIG.API_BASE_URL_TEMPLATE;
         }
-    }
-
-    // 初始化配置
-    async initializeConfig() {
-        try {
-            const newConfig = await this.getWebsoft9Config();
-            CONFIG = newConfig;
-            return CONFIG;
-        } catch (error) {
-            console.warn("Failed to initialize config, using defaults:", error);
-            CONFIG = { ...DEFAULT_CONFIG };
-            return CONFIG;
-        }
-    }
-}
-
-// 监控API调用工具类
-class MonitorAPI {
-    // 生成动态API URL
-    async getApiUrl() {
-        // 直接返回配置中的API地址，不再需要动态拼接地域
-        return CONFIG.API_BASE_URL_TEMPLATE;
     }
 
     // 发送HTTP请求的通用方法
@@ -79,14 +53,14 @@ class MonitorAPI {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                timeout: CONFIG.REQUEST_TIMEOUT / 1000 // 转换为秒
+                timeout: DEFAULT_CONFIG.REQUEST_TIMEOUT / 1000 // 转换为秒
             };
 
             if (data && (method === 'POST' || method === 'PUT')) {
                 options.data = data;
             }
 
-            const { body, statusCode } = await executeCurlCommand(url, options, CONFIG.REQUEST_TIMEOUT);
+            const { body, statusCode } = await executeCurlCommand(url, options, DEFAULT_CONFIG.REQUEST_TIMEOUT);
 
             // 检查HTTP状态码
             if (statusCode === '404') {
@@ -150,7 +124,7 @@ class MetadataService {
     // 使用封装的命令执行器获取元数据的通用方法
     async getMetadata(path) {
         try {
-            const url = `http://${CONFIG.METADATA_BASE_URL}${path}`;
+            const url = `http://${DEFAULT_CONFIG.METADATA_BASE_URL}${path}`;
             const options = {
                 method: 'GET',
                 timeout: 6 // 6秒超时
@@ -168,15 +142,9 @@ class MetadataService {
     async getInstanceId() {
         return this.getMetadata("/latest/meta-data/instance-id");
     }
-
-    // 获取区域ID
-    async getRegionId() {
-        return this.getMetadata("/latest/meta-data/region-id");
-    }
 }
 
 // 创建全局实例
-const configService = new ConfigService();
 const monitorAPI = new MonitorAPI();
 const metadataService = new MetadataService();
 
@@ -257,4 +225,4 @@ export const checkAndDisableMonitoringForDeletedDomains = async (appId, deletedD
 };
 
 // 导出API实例，供其他组件使用
-export { monitorAPI, metadataService, configService };
+export { monitorAPI, metadataService };

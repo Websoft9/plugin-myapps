@@ -11,7 +11,8 @@ import {
     RestartApp,
     StartApp,
     StopApp,
-    UninstallApp
+    UninstallApp,
+    resetApiInstance
 } from './appHub';
 
 // 导入新的 API 核心功能
@@ -43,7 +44,8 @@ export {
     RestartApp,
     StartApp,
     StopApp,
-    UninstallApp
+    UninstallApp,
+    resetApiInstance
 };
 
 // 推荐的使用方式：

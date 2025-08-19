@@ -2,23 +2,27 @@ import MuiAlert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import classNames from 'classnames';
 import cockpit from 'cockpit';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Button, Col, Form, Modal, Nav, OverlayTrigger, Row, Tab, Tooltip } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import DefaultImgEn from '../assets/images/default_en.png';
 import DefaultImgzh from '../assets/images/default_zh.png';
 import Spinner from '../components/Spinner';
 import { RedeployApp, RestartApp, StartApp, StopApp } from '../helpers';
-import AppAccess from './appdetailtabs/appaccess';
-import AppCompose from './appdetailtabs/appcompose';
-import AppContainer from './appdetailtabs/appcontainer';
-import AppDatabases from './appdetailtabs/appdatabases';
-import AppOverview from './appdetailtabs/appoverview';
-import AppPhpVersion from './appdetailtabs/appphpversion';
-import Uninstall from './appdetailtabs/appuninstall';
-import AppVolume from './appdetailtabs/appvolume';
-import AppMonitor from './appdetailtabs/appmonitor';
 import { getApiKey, getNginxConfig } from '../helpers/api_apphub/apiCore';
+import configManager from '../helpers/api_apphub/configManager';
+
+// 懒加载组件以提升性能
+// Lazy load tab components for better performance
+const AppOverview = React.lazy(() => import("../pages/appdetailtabs/appoverview"));
+const AppContainer = React.lazy(() => import("../pages/appdetailtabs/appcontainer"));
+const AppCompose = React.lazy(() => import("../pages/appdetailtabs/appcompose"));
+const Uninstall = React.lazy(() => import("../pages/appdetailtabs/appuninstall"));
+const AppAccess = React.lazy(() => import("../pages/appdetailtabs/appaccess"));
+const AppVolume = React.lazy(() => import("../pages/appdetailtabs/appvolume"));
+const AppPhpVersion = React.lazy(() => import("../pages/appdetailtabs/appphpversion"));
+const AppDatabases = React.lazy(() => import("../pages/appdetailtabs/appdatabases"));
+const AppMonitor = React.lazy(() => import("../pages/appdetailtabs/appmonitor"));
 
 const _ = cockpit.gettext;
 const language = cockpit.language;//获取cockpit的当前语言环境
@@ -42,19 +46,18 @@ const RedeployAppConform = (props) => {
 
     const getRequestConfig = async () => {
         try {
-            const [apiKey, port] = await Promise.all([
-                getApiKey(),  // 直接使用外部导入的方法
-                getNginxConfig() // 直接使用外部导入的方法
-            ]);
+            // 优化：使用 configManager 获取缓存的配置，避免重复 docker 调用
+            const config = await configManager.initialize();
 
             return {
-                baseURL: `${window.location.protocol}//${window.location.hostname}:${port}/api`,
+                baseURL: config.apiURL,
                 headers: {
-                    'x-api-key': apiKey,
+                    'x-api-key': config.apiKey,
                     'Accept': 'application/json'
                 }
             };
         } catch (error) {
+            console.error('[AppDetail] Failed to get request config:', error);
             setShowAlert(true);
             setAlertMessage(error.message);
             throw error;
@@ -417,26 +420,42 @@ const AppDetailModal = (props) => {
             id: '1',
             title: _("Overview"),
             icon: 'mdi dripicons-home',
-            text: <AppOverview data={currentApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppOverview data={currentApp} />
+                </Suspense>
+            ),
         },
         {
             id: '2',
             title: _("Container"),
             icon: 'mdi dripicons-stack',
-            text: <AppContainer data={currentApp} onDataChange={props.onDataChange} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppContainer data={currentApp} onDataChange={props.onDataChange} />
+                </Suspense>
+            ),
         },
         {
             id: '3',
             title: _("Compose"),
             icon: 'mdi dripicons-stack',
-            text: <AppCompose data={currentApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppCompose data={currentApp} />
+                </Suspense>
+            ),
         },
         {
             id: '4',
             title: _("Uninstall"),
             icon: 'mdi mdi-cog-outline',
-            text: <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}
-                onDataChange={props.onDataChange} onCloseFatherModal={props.onClose} isMonitorApp={props.isMonitorApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <Uninstall data={currentApp} ref={childRef} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable}
+                        onDataChange={props.onDataChange} onCloseFatherModal={props.onClose} isMonitorApp={props.isMonitorApp} />
+                </Suspense>
+            ),
         }
     ];
     if (showAccess) {
@@ -444,7 +463,11 @@ const AppDetailModal = (props) => {
             id: '5',
             title: _("Access"),
             icon: 'mdi dripicons-stack',
-            text: <AppAccess data={currentApp} onDataChange={handleDataChange} isMonitorApp={props.isMonitorApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppAccess data={currentApp} onDataChange={handleDataChange} isMonitorApp={props.isMonitorApp} />
+                </Suspense>
+            ),
         });
     }
     if (showAppVolumes) {
@@ -452,7 +475,11 @@ const AppDetailModal = (props) => {
             id: '6',
             title: _("Volumes"),
             icon: 'mdi dripicons-stack',
-            text: <AppVolume data={currentApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppVolume data={currentApp} />
+                </Suspense>
+            ),
         });
     }
     if (currentApp && props.isPhpApp) {
@@ -460,7 +487,11 @@ const AppDetailModal = (props) => {
             id: '7',
             title: _("PHP"),
             icon: 'mdi dripicons-stack',
-            text: <AppPhpVersion data={currentApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppPhpVersion data={currentApp} />
+                </Suspense>
+            ),
         });
     }
     if (showDBExpose) {
@@ -468,7 +499,11 @@ const AppDetailModal = (props) => {
             id: '8',
             title: _("Database"),
             icon: 'mdi dripicons-stack',
-            text: <AppDatabases data={currentApp} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppDatabases data={currentApp} />
+                </Suspense>
+            ),
         });
     }
     if (currentApp && props.isMonitorApp) {
@@ -476,8 +511,13 @@ const AppDetailModal = (props) => {
             id: '9',
             title: _("Monitor"),
             icon: 'mdi mdi-chart-line',
-            text: <AppMonitor data={currentApp} app_id={app_id} setMainContainerId={setMainContainerId}
-                mainContainerId={mainContainerId} setContainersInfo={setContainersInfo} containersInfo={containersInfo} baseURL={baseURL} dataRefreshKey={dataRefreshKey} />,
+            text: (
+                <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
+                    <AppMonitor data={currentApp} app_id={app_id} setMainContainerId={setMainContainerId}
+                        mainContainerId={mainContainerId} setContainersInfo={setContainersInfo} containersInfo={containersInfo}
+                        baseURL={baseURL} dataRefreshKey={dataRefreshKey} />
+                </Suspense>
+            ),
         });
     }
 

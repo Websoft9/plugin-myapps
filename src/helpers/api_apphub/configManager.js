@@ -1,144 +1,83 @@
-import cockpit from 'cockpit';
-import { getNginxConfig, getApiKey, getPhpAppsConfig, getMonitorAppsConfig } from './apiCore';
+import { getFullConfig } from './apiCore';
 
 class ConfigManager {
     constructor() {
         this.config = null;
-        this.initializing = false;
-        this.initPromise = null;
-        this.cacheTimeout = 5 * 60 * 1000; // 5分钟基础缓存
-        this.lastConfigChecksum = null; // 用于检测配置变化
-    }
-
-    // 计算配置的校验和
-    _calculateConfigChecksum(config) {
-        const configStr = JSON.stringify({
-            phpApps: config.phpApps,
-            monitorApps: config.monitorApps,
-            nginxPort: config.nginxPort
-        });
-        return this._simpleHash(configStr);
-    }
-
-    // 简单哈希函数
-    _simpleHash(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-        }
-        return hash;
+        this.configPromise = null;
+        this.cacheTimeout = 24 * 60 * 60 * 1000; // 24小时缓存
     }
 
     async initialize() {
-        if (this.config) {
+        // 如果已有有效配置，直接返回
+        if (this.config && this._isCacheValid()) {
             return this.config;
         }
 
-        if (this.initializing) {
-            return this.initPromise;
+        // 如果正在初始化，等待现有的Promise
+        if (this.configPromise) {
+            return this.configPromise;
         }
-
-        this.initializing = true;
-        this.initPromise = this._fetchConfig();
+        this.configPromise = this._fetchConfig();
 
         try {
-            this.config = await this.initPromise;
+            this.config = await this.configPromise;
             return this.config;
         } finally {
-            this.initializing = false;
+            this.configPromise = null;
         }
     }
 
     async _fetchConfig() {
-
         try {
-            // 先尝试从本地缓存获取（如果最近获取过且未过期）
+            // 检查本地存储中的有效缓存
             const cachedConfig = this._getCachedConfig();
             if (cachedConfig && this._isCacheValid(cachedConfig)) {
-                // 检查配置是否发生变化
-                const isConfigChanged = await this._checkConfigChanged(cachedConfig.config);
-                if (!isConfigChanged) {
-                    return cachedConfig.config;
-                }
+                return cachedConfig.config;
             }
 
-            // 并行获取所有配置
-            const [nginxPort, apiKey, phpApps, monitorApps] = await Promise.allSettled([
-                getNginxConfig(),
-                getApiKey().catch(() => null), // API key 可选，失败时返回 null
-                getPhpAppsConfig(),
-                getMonitorAppsConfig()
-            ]);
+            // 一次性获取完整配置（包含应用列表）
+            const fullConfig = await getFullConfig();
 
-            const config = {
-                nginxPort: nginxPort.status === 'fulfilled' ? nginxPort.value : 9000,
-                apiKey: apiKey.status === 'fulfilled' ? apiKey.value : null,
-                phpApps: phpApps.status === 'fulfilled' ? phpApps.value : [],
-                monitorApps: monitorApps.status === 'fulfilled' ? monitorApps.value : [],
-                baseURL: `${window.location.protocol}//${window.location.hostname}:${nginxPort.status === 'fulfilled' ? nginxPort.value : 9000}`,
-                apiURL: `${window.location.protocol}//${window.location.hostname}:${nginxPort.status === 'fulfilled' ? nginxPort.value : 9000}/api`,
-                timestamp: Date.now()
-            };
-
-            // 计算并保存新的校验和
-            this.lastConfigChecksum = this._calculateConfigChecksum(config);
+            const config = this._buildConfig(
+                fullConfig.nginxPort,
+                fullConfig.apiKey,
+                fullConfig.phpApps,
+                fullConfig.monitorApps
+            );
 
             // 缓存到本地存储
             this._saveToCache(config);
 
             return config;
         } catch (error) {
+            console.error('[ConfigManager] Config initialization failed:', error);
 
-            // 尝试使用过期的缓存作为fallback
+            // 尝试使用过期缓存作为fallback
             const cachedConfig = this._getCachedConfig();
             if (cachedConfig) {
+                console.warn('[ConfigManager] Using expired cache as fallback');
                 return cachedConfig.config;
             }
 
-            // 最后的fallback：默认配置
-            const defaultConfig = this._getDefaultConfig();
-            return defaultConfig;
+            // 最后使用默认配置
+            console.warn('[ConfigManager] Using default config as last resort');
+            return this._getDefaultConfig();
         }
     }
 
-    // 检查配置是否发生变化
-    async _checkConfigChanged(cachedConfig) {
-        try {
-            // 快速检查：计算当前配置的校验和
-            const currentChecksum = this._calculateConfigChecksum(cachedConfig);
+    _buildConfig(nginxPort, apiKey, phpApps = [], monitorApps = []) {
+        const timestamp = Date.now();
+        const { hostname, protocol } = window.location;
 
-            // 如果校验和相同，说明配置未变化
-            if (this.lastConfigChecksum === currentChecksum) {
-                // 但为了确保准确性，我们还是要偶尔检查实际配置
-                const now = Date.now();
-                const lastFullCheck = localStorage.getItem('last_full_config_check');
-                if (lastFullCheck && (now - parseInt(lastFullCheck)) < 60000) { // 1分钟内不重复全量检查
-                    return false;
-                }
-            }
-
-            // 获取最新配置进行比较
-            const [phpApps, monitorApps] = await Promise.allSettled([
-                getPhpAppsConfig(),
-                getMonitorAppsConfig()
-            ]);
-
-            const latestConfig = {
-                phpApps: phpApps.status === 'fulfilled' ? phpApps.value : [],
-                monitorApps: monitorApps.status === 'fulfilled' ? monitorApps.value : [],
-                nginxPort: cachedConfig.nginxPort
-            };
-
-            const latestChecksum = this._calculateConfigChecksum(latestConfig);
-            localStorage.setItem('last_full_config_check', Date.now().toString());
-
-            return currentChecksum !== latestChecksum;
-        } catch (error) {
-            console.warn('[ConfigManager] Failed to check config changes:', error);
-            return false; // 检查失败时假设配置未变化
-        }
+        return {
+            nginxPort,
+            apiKey,
+            phpApps,
+            monitorApps,
+            baseURL: `${protocol}//${hostname}:${nginxPort}`,
+            apiURL: `${protocol}//${hostname}:${nginxPort}/api`,
+            timestamp
+        };
     }
 
     _getCachedConfig() {
@@ -146,24 +85,18 @@ class ConfigManager {
             const cached = localStorage.getItem('websoft9_myapps_config_cache');
             return cached ? JSON.parse(cached) : null;
         } catch (error) {
+            console.warn('[ConfigManager] Failed to read cache:', error);
             return null;
         }
     }
 
-    _isCacheValid(cachedData) {
-        if (!cachedData || !cachedData.timestamp) {
-            return false;
-        }
-        return (Date.now() - cachedData.timestamp) < this.cacheTimeout;
+    _isCacheValid(cachedData = this.config) {
+        return cachedData?.timestamp && (Date.now() - cachedData.timestamp) < this.cacheTimeout;
     }
 
     _saveToCache(config) {
         try {
-            const cacheData = {
-                config,
-                timestamp: Date.now(),
-                checksum: this._calculateConfigChecksum(config)
-            };
+            const cacheData = { config, timestamp: Date.now() };
             localStorage.setItem('websoft9_myapps_config_cache', JSON.stringify(cacheData));
         } catch (error) {
             console.warn('[ConfigManager] Failed to save cache:', error);
@@ -171,44 +104,56 @@ class ConfigManager {
     }
 
     _getDefaultConfig() {
-        return {
-            nginxPort: 9000,
-            apiKey: null,
-            phpApps: [],
-            monitorApps: [],
-            baseURL: `${window.location.protocol}//${window.location.hostname}:9000`,
-            apiURL: `${window.location.protocol}//${window.location.hostname}:9000/api`,
-            timestamp: Date.now()
-        };
+        return this._buildConfig(9000, null, [], []);
     }
 
+    // 获取配置（同步方法，优先返回缓存的配置）
     getConfig() {
-        return this.config || this._getDefaultConfig();
+        // 如果有有效的缓存配置，直接返回
+        if (this.config && this._isCacheValid()) {
+            return this.config;
+        }
+
+        // 尝试从本地存储获取缓存
+        const cachedConfig = this._getCachedConfig();
+        if (cachedConfig && this._isCacheValid(cachedConfig)) {
+            this.config = cachedConfig.config;
+            return this.config;
+        }
+
+        // 如果没有有效配置，抛出错误而不是返回默认配置
+        throw new Error('No valid configuration available. Please call initialize() first.');
     }
 
-    // 清除缓存（用于调试或强制刷新）
+    // 获取配置（异步方法，确保配置可用）
+    async getConfigAsync() {
+        if (this.config && this._isCacheValid()) {
+            return this.config;
+        }
+        return await this.initialize();
+    }
+
+    // 清除缓存
     clearCache() {
         try {
             localStorage.removeItem('websoft9_myapps_config_cache');
             this.config = null;
-            this.initializing = false;
-            this.initPromise = null;
+            this.configPromise = null;
         } catch (error) {
             console.warn('[ConfigManager] Failed to clear cache:', error);
         }
     }
 
-    // 预加载配置（可选，用于进一步优化首次加载）
+    // 预加载配置
     async preload() {
-        if (!this.config && !this.initializing) {
-            // 后台预加载，不阻塞UI
+        if (!this.config && !this.configPromise) {
             this.initialize().catch(error => {
                 console.warn('[ConfigManager] Preload failed:', error);
             });
         }
     }
 
-    // 获取配置的简化方法
+    // 简化的配置获取方法
     async getBaseURL() {
         const config = await this.initialize();
         return config.baseURL;
@@ -229,13 +174,11 @@ class ConfigManager {
         return config.apiKey;
     }
 
-    // 新增获取PHP应用列表的方法
     async getPhpApps() {
         const config = await this.initialize();
         return config.phpApps || [];
     }
 
-    // 新增获取监控应用列表的方法
     async getMonitorApps() {
         const config = await this.initialize();
         return config.monitorApps || [];

@@ -13,7 +13,7 @@ import { Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 import Spinner from '../../components/Spinner';
 import { RedeployApp } from '../../helpers';
-import { getApiKey, getNginxConfig } from '../../helpers/api_apphub/apiCore';
+import configManager from '../../helpers/api_apphub/configManager';
 
 const _ = cockpit.gettext;
 
@@ -35,15 +35,13 @@ const RedeployAppConform = (props): React$Element<React$FragmentType> => {
 
     const getRequestConfig = async () => {
         try {
-            const [apiKey, port] = await Promise.all([
-                getApiKey(),  // 直接使用外部导入的方法
-                getNginxConfig() // 直接使用外部导入的方法
-            ]);
+            // 使用统一的配置管理器获取配置
+            const config = await configManager.getConfig();
 
             return {
-                baseURL: `${window.location.protocol}//${window.location.hostname}:${port}/api`,
+                baseURL: `${window.location.protocol}//${window.location.hostname}:${config.nginxPort}/api`,
                 headers: {
-                    'x-api-key': apiKey,
+                    'x-api-key': config.apiKey,
                     'Accept': 'application/json'
                 }
             };
