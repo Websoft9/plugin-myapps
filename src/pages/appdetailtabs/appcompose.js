@@ -21,7 +21,7 @@ const MyMuiAlert = React.forwardRef(function Alert(props, ref) {
 });
 
 //重建应用弹窗
-const RedeployAppConform = (props): React$Element<React$FragmentType> => {
+const RedeployAppConform = (props) => {
     const [disable, setDisable] = useState(false);//用于按钮禁用
     const [showAlert, setShowAlert] = useState(false); //用于是否显示错误提示
     const [alertType, setAlertType] = useState("error");//用于显示错误提示类型
@@ -293,7 +293,7 @@ const steps = [
     },
 ];
 
-const AppCompose = (props): React$Element<React$FragmentType> => {
+const AppCompose = (props) => {
     const [activeStep, setActiveStep] = React.useState(0);
     const [showRedeployConform, setShowRedeployConform] = useState(false); //用于显示状态为inactive时显示确定重建的弹窗
 
