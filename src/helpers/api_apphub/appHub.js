@@ -6,7 +6,6 @@ let apiInstance = null;
 
 const getApiInstance = () => {
     if (!apiInstance) {
-        console.log('[AppHub] Creating new APICore instance');
         apiInstance = new APICore();
     }
     return apiInstance;
@@ -34,7 +33,7 @@ function RemoveErrorApp(app_id, params) {
 //重建App(状态为：Inactive)
 function RedeployApp(app_id, params) {
     const baseUrl = `/apps/${app_id}/redeploy`;
-    return getApiInstance().put(`${baseUrl}`, params);
+    return getApiInstance().put(`${baseUrl}`, params, {});
 }
 
 //App 卸载
@@ -76,13 +75,13 @@ function AppDomainDeleteByProxyID(proxy_id, params) {
 //根据ProxyID更新域名
 function AppDomainUpdateByProxyID(proxy_id, params, body) {
     const baseUrl = `/proxys/${proxy_id}`;
-    return getApiInstance().put(`${baseUrl}`, body, params);
+    return getApiInstance().put(`${baseUrl}`, params, body);
 }
 
 //根据app_id创建域名
 function AppDomainCreateByAppID(app_id, params, body) {
     const baseUrl = `/proxys/${app_id}`;
-    return getApiInstance().post(`${baseUrl}`, body, params);
+    return getApiInstance().post(`${baseUrl}`, params, body);
 }
 
 //创建App备份
@@ -106,13 +105,12 @@ function DeleteAppBackup(snapshot_id, params) {
 //恢复App备份
 function RestoreAppBackup(snapshot_id, app_id, params) {
     const baseUrl = `/backup/restore/${app_id}/${snapshot_id}`;
-    return getApiInstance().post(`${baseUrl}`, {}, params);
+    return getApiInstance().post(`${baseUrl}`, params, {});
 }
 
 // 重置API实例 - 用于错误恢复
 function resetApiInstance() {
     if (apiInstance) {
-        console.log('[AppHub] Resetting APICore instance');
         apiInstance = null;
     }
 }

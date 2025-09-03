@@ -90,7 +90,6 @@ const getApiKey = async () => {
 const clearConfigCache = () => {
     configCache.clear();
     fetchPromise.clear();
-    console.log('[ApiCore] Configuration cache cleared');
 };
 
 // 检查是否为配置错误并清除相应缓存
@@ -135,7 +134,6 @@ class APICore {
         try {
             // 优先使用 configManager 的缓存配置（避免重复初始化）
             const config = await configManager.getConfigAsync();
-            console.log('[APICore] Using cached config for axios initialization');
 
             this.axiosInstance = axios.create({
                 baseURL: config.apiURL,
@@ -220,8 +218,8 @@ class APICore {
 
     // HTTP方法的简化封装
     get = (url, params) => this.request('get', url, null, params);
-    post = (url, data, params) => this.request('post', url, data, params);
-    put = (url, data, params) => this.request('put', url, data, params);
+    post = (url, params, data) => this.request('post', url, data, params);
+    put = (url, params, data) => this.request('put', url, data, params);
     delete = (url, params) => this.request('delete', url, null, params);
 }
 

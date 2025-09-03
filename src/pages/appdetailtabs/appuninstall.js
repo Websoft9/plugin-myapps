@@ -80,7 +80,12 @@ const UninstallConform = (props) => {
                         try {
                             // 首先检查并禁用监控（如果启用了的话）
                             if (props.isMonitorApp) {
-                                await checkAndDisableMonitoring(props.app.app_id);
+                                try {
+                                    await checkAndDisableMonitoring(props.app.app_id);
+                                } catch (monitorError) {
+                                    // 监控禁用失败不应该阻断卸载流程，只记录警告
+                                    console.warn('Failed to disable monitoring, but continuing with uninstall');
+                                }
                             }
 
                             // 然后执行应用卸载

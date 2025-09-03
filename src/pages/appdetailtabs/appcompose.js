@@ -12,7 +12,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, Card, Col, Form, Modal, Row } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 import Spinner from '../../components/Spinner';
-import { RedeployApp } from '../../helpers';
 import configManager from '../../helpers/api_apphub/configManager';
 
 const _ = cockpit.gettext;
@@ -388,7 +387,7 @@ const AppCompose = (props): React$Element<React$FragmentType> => {
             </Row>
             {
                 showRedeployConform &&
-                <RedeployAppConform showConform={showRedeployConform} onClose={cancelredeployApp} app={props.data} handleBackToLastStep={handleBackToLastStep} />
+                <RedeployAppConform showConform={showRedeployConform} onClose={cancelredeployApp} app={props.data} handleBackToLastStep={handleBackToLastStep} enableButton={props.enableButton} disableButton={props.disabledButton} />
             }
         </>
     );

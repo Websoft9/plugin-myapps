@@ -83,7 +83,7 @@ class MonitorAPI {
         } catch (error) {
             // 只在非404错误时输出到控制台，避免正常的404查询被当作错误
             if (!error.message || !error.message.includes('404')) {
-                console.error("API request failed:", error);
+                console.error("Monitoring API request failed");
             }
             throw error;
         }
@@ -160,16 +160,13 @@ export const checkAndDisableMonitoring = async (appId) => {
 
         // 如果监控已启用，则禁用它
         if (monitorStatus && monitorStatus.domain && monitorStatus.email) {
-            console.log(`Disabling monitoring for app ${appId}...`);
             await monitorAPI.disableMonitoring(monitorId);
-            console.log(`Monitoring disabled successfully for app ${appId}`);
             return true; // 返回true表示成功禁用了监控
         }
         return false; // 返回false表示监控本来就没有启用
     } catch (error) {
         // 如果是404错误，说明监控本来就没有启用，这是正常情况
         if (error.message && (error.message.includes('404') || error.message.includes('Not Found'))) {
-            console.log(`No monitoring found for app ${appId}, skipping disable step`);
             return false;
         } else {
             // 其他错误记录但不阻断卸载流程
@@ -201,12 +198,9 @@ export const checkAndDisableMonitoringForDeletedDomains = async (appId, deletedD
             });
 
             if (isDomainBeingDeleted) {
-                console.log(`Monitored domain is being deleted, disabling monitoring for app ${appId}...`);
                 await monitorAPI.disableMonitoring(monitorId);
-                console.log(`Monitoring disabled successfully for app ${appId} due to domain deletion`);
                 return true;
             } else {
-                console.log(`Monitored domain ${monitoredDomain} is not being deleted, keeping monitoring enabled`);
                 return false;
             }
         }
@@ -214,7 +208,6 @@ export const checkAndDisableMonitoringForDeletedDomains = async (appId, deletedD
     } catch (error) {
         // 如果是404错误，说明监控本来就没有启用，这是正常情况
         if (error.message && (error.message.includes('404') || error.message.includes('Not Found'))) {
-            console.log(`No monitoring found for app ${appId}, skipping disable step`);
             return false;
         } else {
             // 其他错误记录但不阻断域名删除流程

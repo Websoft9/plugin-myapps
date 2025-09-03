@@ -442,7 +442,7 @@ const AppDetailModal = (props) => {
             icon: 'mdi dripicons-stack',
             text: (
                 <Suspense fallback={<div className="text-center"><i className="fa fa-spinner fa-spin"></i></div>}>
-                    <AppCompose data={currentApp} />
+                    <AppCompose data={currentApp} disabledButton={setAppdetailButtonDisable} enableButton={setAppdetailButtonEnable} />
                 </Suspense>
             ),
         },

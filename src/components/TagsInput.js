@@ -48,7 +48,6 @@ const DeleteDomainConform = (props) => {
         try {
             // 检查被删除的域名是否正在被监控，如果是则禁用监控
             await checkAndDisableMonitoringForDeletedDomains(appId, domains);
-            console.log(`Checked monitoring for deleted domains: ${domains.join(', ')}`);
         } catch (error) {
             // 监控检查失败不应该阻止域名删除
             console.warn(`Failed to check/disable monitoring for deleted domains:`, error.message || error);

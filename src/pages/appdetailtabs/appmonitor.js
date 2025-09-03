@@ -145,6 +145,14 @@ const AppMonitor = (props) => {
     };
 
     const enableMonitoring = async () => {
+        // 检查是否有可用域名
+        if (domain_names.length === 0) {
+            setShowAlert(true);
+            setAlertMessage(_("Please bind a domain name to the application before enabling monitoring."));
+            setAlertType("warning");
+            return;
+        }
+
         if (!monitorUrl || !notificationEmail || !isEmailValid) return;
 
         setLoading(true);
@@ -183,6 +191,14 @@ const AppMonitor = (props) => {
     };
 
     const updateMonitoring = async () => {
+        // 检查是否有可用域名
+        if (domain_names.length === 0) {
+            setShowAlert(true);
+            setAlertMessage(_("Please bind a domain name to the application before updating monitoring."));
+            setAlertType("warning");
+            return;
+        }
+
         if (!monitorUrl || !notificationEmail || !isEmailValid) return;
 
         setLoading(true);
@@ -252,7 +268,18 @@ const AppMonitor = (props) => {
     // 组件挂载时查询监控状态
     useEffect(() => {
         if (app_id) {
-            // 使用统一的配置管理器并查询监控状态
+            // 检查是否有可用的域名，没有域名时不需要调用监控API
+            if (domain_names.length === 0) {
+                // 没有域名绑定时，直接设置为禁用状态，不调用API
+                setMonitorStatus('disabled');
+                setMonitorUrl('');
+                setNotificationEmail('');
+                setDashboardUrl('');
+                setLoading(false);
+                return;
+            }
+
+            // 有域名时才调用监控相关API
             const initializeAndQuery = async () => {
                 try {
                     await configManager.initialize();
@@ -267,7 +294,7 @@ const AppMonitor = (props) => {
 
             initializeAndQuery();
         }
-    }, [app_id, props.dataRefreshKey]); // 添加 dataRefreshKey 作为依赖
+    }, [app_id, props.dataRefreshKey, domain_names.length]); // 添加 domain_names.length 作为依赖
 
     const handleEnableMonitoring = () => {
         if (monitorUrl && notificationEmail && isEmailValid) {
@@ -287,8 +314,16 @@ const AppMonitor = (props) => {
 
     const handleCancelEdit = () => {
         setIsEditing(false);
-        // 恢复原来的值
-        queryMonitorStatus();
+        // 只有在有域名的情况下才恢复原来的值（调用API）
+        if (domain_names.length > 0) {
+            queryMonitorStatus();
+        } else {
+            // 没有域名时直接重置状态
+            setMonitorUrl('');
+            setNotificationEmail('');
+            setMonitorStatus('disabled');
+            setDashboardUrl('');
+        }
     };
 
     return (
@@ -339,7 +374,7 @@ const AppMonitor = (props) => {
                                             onChange={handleEmailChange}
                                             isInvalid={!isEmailValid}
                                             size="sm"
-                                            disabled={(monitorStatus === 'enabled' && !isEditing) || loading}
+                                            disabled={domain_names.length === 0 || (monitorStatus === 'enabled' && !isEditing) || loading}
                                             className="me-2"
                                         />
                                         {!isEmailValid && (

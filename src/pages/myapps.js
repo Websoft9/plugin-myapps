@@ -435,7 +435,6 @@ const MyApps = () => {
                     baseURL = config.baseURL;
                     setPhpApps(config.phpApps || []);
                     setMonitorApps(config.monitorApps || []);
-                    console.log('[MyApps] Using preloaded config, skipping initialization');
                 } catch (configError) {
                     // 只有在配置获取失败时才进行初始化
                     console.warn('[MyApps] Preloaded config not available, initializing...', configError);
@@ -475,7 +474,6 @@ const MyApps = () => {
                         const hasMonitorAppsChanged = !arraysEqual(monitorApps, config.monitorApps || []);
 
                         if (hasPhpAppsChanged || hasMonitorAppsChanged) {
-                            console.log('[MyApps] Config changed during auto-refresh, updating...');
                             setPhpApps(config.phpApps || []);
                             setMonitorApps(config.monitorApps || []);
                         }
