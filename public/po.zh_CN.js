@@ -1284,5 +1284,9 @@ cockpit.locale({
         null,
         "备份创建成功！"
     ]
-});
+});,
+    "W9_SMTP_PORT_SET": [
+        null,
+        "SMTP 端口"
+    ]
 
