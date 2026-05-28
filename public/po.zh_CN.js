@@ -1283,8 +1283,7 @@ cockpit.locale({
     "Backup created successfully!": [
         null,
         "备份创建成功！"
-    ]
-});,
+    ],
     "W9_PROXY_REMOTING_PORT_SET": [
         null,
         "RocketMQ Proxy Remoting 端口"
@@ -1313,4 +1312,4 @@ cockpit.locale({
         null,
         "RocketMQ Broker HA 端口"
     ]
-
+});
